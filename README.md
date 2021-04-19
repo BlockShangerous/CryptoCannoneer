@@ -59,3 +59,5 @@ Ironically, the flamethrowers run off automotive starting fluid and so they lite
 
 
 If you want to support this project please consider donating and/or buying some NFTs (coming soon!). This has been a ton of fun but also expensive and time consuming. I really would love to see this become profitable so I can expand and create a shooting gallery where people can fire golf balls at bottles and other breakables! If I can start making a profit on this I would also like to get a more suitable location and create an automatic reloader so this could theoretically run 24/7. (Obviously the flamethrowers won't be on unsupervised, but people could still play and earn while I sleep)
+
+I want to turn this into a fun, gamified way to teach newcomers about token prices, market cap, circulating supply, inflationary/deflationary tokenomics, and token "burns." I see far too many people asking about "what cheap coin might go up to $60k next?" not understanding the implications of market cap and token quantity instead of individual token price
