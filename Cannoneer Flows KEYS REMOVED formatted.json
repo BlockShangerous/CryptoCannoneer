@@ -1,0 +1,5233 @@
+[
+    {
+        "id": "118e52da.1ff74d",
+        "type": "tab",
+        "label": "Cannoneer",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "34c774d6.3d64cc",
+        "type": "tab",
+        "label": "Burninator",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "fece67b7.0fd7b8",
+        "type": "tab",
+        "label": "DB",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "29235876.a28e58",
+        "type": "sqlitedb",
+        "db": "TelegramUsers",
+        "mode": "RWC"
+    },
+    {
+        "id": "fcd9f8b1.f9c5e8",
+        "type": "telegram bot",
+        "botname": "CannoneerBot",
+        "usernames": "",
+        "chatids": "",
+        "baseapiurl": "",
+        "updatemode": "polling",
+        "pollinterval": "300",
+        "usesocks": false,
+        "sockshost": "",
+        "socksport": "6667",
+        "socksusername": "anonymous",
+        "sockspassword": "",
+        "bothost": "",
+        "botpath": "",
+        "localbotport": "8443",
+        "publicbotport": "8443",
+        "privatekey": "",
+        "certificate": "",
+        "useselfsignedcertificate": false,
+        "sslterminated": false,
+        "verboselogging": false
+    },
+    {
+        "id": "2abfa9c2.42ff86",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "Monitor Account",
+        "func": "var StellarSdk = global.get(\"stellarsdk\");\nvar server = new StellarSdk.Server(\"https://horizon-testnet.stellar.org\");\nvar accountId = \"GARCVA5752SK34MMPQJ2NI4UYMNP35BN43PEEC5DCYFOSF3ICOTPJBCT\";\nflow.set('accountId',accountId);\nvar sender = 0;\nvar type = 0;\nvar amount_rec = 0;\nflow.set('amount_rec',amount_rec);\nvar wait=0;\n    \n// Create an API call to query payments involving the account.\nvar payments = server.payments().forAccount(accountId);\n\n// If some payments have already been handled, start the results from the\n// last seen payment. (See below in `handlePayment` where it gets saved.)\nvar lastToken = loadLastPagingToken();\nif (lastToken) {\n  payments.cursor(lastToken);\n}\n\n// `stream` will send each recorded payment, one by one, then keep the\n// connection open and continue to send you new payments as they occur.\npayments.stream({\n  onmessage: function (payment) {\n    // Record the paging token so we can start from here next time.\n    savePagingToken(payment.paging_token);\n\n    // The payments stream includes both sent and received payments. We only\n    // want to process received payments here.\n    if (payment.to !== accountId) {\n      return;\n    }\n\n    // In Stellar’s API, Lumens are referred to as the “native” type. Other\n    // asset types have more detailed information.\n    var asset;\n    if (payment.asset_type === \"native\") {\n      asset = \"lumens\";\n    } else {\n      asset = payment.asset_code;\n    }\n    //console.log(payment.amount + \" \" + asset + \" from \" + payment.from);\n    msg.payload=\"amount: \"+payment.amount+\" asset: \"+asset+\" payment from: \"+payment.from\n    sender = payment.from;\n    type = asset;\n    amount_rec = payment.amount;\n    flow.set('sender',sender);\n    flow.set('type',type);\n    flow.set('amount_rec',amount_rec);\n    \n    \n    node.send(msg)\n   // var wait=2;\n  //  flow.set('wait',wait)\n    //node.send(msg.payload)\n  },\n\n\n\n  onerror: function (error) {\n    console.error(\"Error in payment stream\");\n  },\n});\n\nfunction savePagingToken(token) {\n  // In most cases, you should save this to a local database or file so that\n  // you can load it next time you stream new payments.\n}\n\nfunction loadLastPagingToken() {\n  // Get the last paging token from a local database or file\n}\n\n//return msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 140,
+        "y": 160,
+        "wires": [
+            [
+                "accd8cf1.cb83d",
+                "8c632814.963938"
+            ]
+        ]
+    },
+    {
+        "id": "accd8cf1.cb83d",
+        "type": "switch",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "property": "type",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "TRRT",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "lumens",
+                "vt": "str"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 360,
+        "y": 176,
+        "wires": [
+            [
+                "b8824f7e.896d4"
+            ],
+            [
+                "f8deb597.4201a8"
+            ]
+        ]
+    },
+    {
+        "id": "8c632814.963938",
+        "type": "debug",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 720,
+        "y": 96,
+        "wires": []
+    },
+    {
+        "id": "8bc19357.528df",
+        "type": "comment",
+        "z": "34c774d6.3d64cc",
+        "name": "Received payment response",
+        "info": "",
+        "x": 410,
+        "y": 96,
+        "wires": []
+    },
+    {
+        "id": "b8824f7e.896d4",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "TRRT",
+        "func": "var wait=2\nflow.set('wait',wait)\n\nvar amount_rec = flow.get('amount_rec',amount_rec);\n\nmsg.payload = \"BURNING \"+amount_rec+\" TRRT!\"\n\n\n\nreturn msg;\n\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 870,
+        "y": 160,
+        "wires": [
+            [
+                "6c4bbc19.2efb64",
+                "a9517de9.7b88d",
+                "e5420a23.7bef68",
+                "777d9662.222908"
+            ]
+        ]
+    },
+    {
+        "id": "f8deb597.4201a8",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "XLM",
+        "func": "var amount_rec = flow.get('amount_rec',amount_rec);\n\nmsg.payload = \"Thanks for the \"+amount_rec+\" Lumens!\"\nreturn msg;\n\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 560,
+        "y": 236,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "be3f75fd.091e88",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "How much TRRT?",
+        "func": "msg.payload.type = 'message';\nmsg.payload.content = 'How much TRRT to burn?';\nmsg.payload.options = {reply_to_message_id : msg.payload.messageId}\n\nreturn [ msg ];\n",
+        "outputs": "1",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 270,
+        "y": 760,
+        "wires": [
+            [
+                "172efc42.6cece4"
+            ]
+        ]
+    },
+    {
+        "id": "89d39f9e.db25b",
+        "type": "telegram command",
+        "z": "34c774d6.3d64cc",
+        "name": "/burn",
+        "command": "/burn",
+        "bot": "",
+        "strict": false,
+        "hasresponse": false,
+        "useregex": false,
+        "removeregexcommand": false,
+        "outputs": 1,
+        "x": 70,
+        "y": 600,
+        "wires": [
+            [
+                "a244e8e4.d25f78",
+                "51f3b0a9.19fef",
+                "3da98306.4b059c"
+            ]
+        ]
+    },
+    {
+        "id": "172efc42.6cece4",
+        "type": "telegram sender",
+        "z": "34c774d6.3d64cc",
+        "name": "send question",
+        "bot": "",
+        "haserroroutput": false,
+        "outputs": 1,
+        "x": 470,
+        "y": 760,
+        "wires": [
+            [
+                "31fc6b5e.d09384"
+            ]
+        ]
+    },
+    {
+        "id": "31fc6b5e.d09384",
+        "type": "telegram reply",
+        "z": "34c774d6.3d64cc",
+        "name": "get reply",
+        "bot": "",
+        "x": 645,
+        "y": 760,
+        "wires": [
+            [
+                "ffd31db2.03607",
+                "5017ccd8.4ef9b4"
+            ]
+        ]
+    },
+    {
+        "id": "ffd31db2.03607",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "store amount",
+        "func": "var amount = msg.payload\nflow.set('amount',amount);",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1150,
+        "y": 660,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "61815d5f.fb17d4",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "Submit TRRT Burn",
+        "func": "var StellarSdk = global.get(\"stellarsdk\");\nvar server = new StellarSdk.Server(\"https://horizon-testnet.stellar.org\");\n//var secret = msg.payload.content;\nvar secret = msg.topic;\nvar recipient = \"GARCVA5752SK34MMPQJ2NI4UYMNP35BN43PEEC5DCYFOSF3ICOTPJBCT\";\nvar amount = flow.get('amount',amount);\n\nvar sourceKeys = StellarSdk.Keypair.fromSecret(secret);\nvar destinationId = recipient;\n// Transaction will hold a built transaction we can resubmit if the result is unknown.\nvar transaction;\n\n// First, check to make sure that the destination account exists.\n// You could skip this, but if the account does not exist, you will be charged\n// the transaction fee when the transaction fails.\nserver\n  .loadAccount(destinationId)\n  // If the account is not found, surface a nicer error message for logging.\n  .catch(function (error) {\n    if (error instanceof StellarSdk.NotFoundError) {\n      throw new Error(\"The destination account does not exist!\");\n    } else return error;\n  })\n  // If there was no error, load up-to-date information on your account.\n  .then(function () {\n    return server.loadAccount(sourceKeys.publicKey());\n  })\n  .then(function (sourceAccount) {\n    // Start building the transaction.\n    transaction = new StellarSdk.TransactionBuilder(sourceAccount, {\n      fee: StellarSdk.BASE_FEE,\n      networkPassphrase: StellarSdk.Networks.TESTNET,\n    })\n      .addOperation(\n        StellarSdk.Operation.payment({\n          destination: destinationId,\n          // Because Stellar allows transaction in many currencies, you must\n          // specify the asset type. The special \"native\" asset represents Lumens.\n          //asset: StellarSdk.Asset.native(),\n          asset: new StellarSdk.Asset(\"TRRT\",\"GARCVA5752SK34MMPQJ2NI4UYMNP35BN43PEEC5DCYFOSF3ICOTPJBCT\"),\n          amount: amount,\n        }),\n      )\n      // A memo allows you to add your own metadata to a transaction. It's\n      // optional and does not affect how Stellar treats the transaction.\n      .addMemo(StellarSdk.Memo.text('BURN BABY BURN'))\n      // Wait a maximum of three minutes for the transaction\n      .setTimeout(180)\n      .build();\n    // Sign the transaction to prove you are actually the person sending it.\n    transaction.sign(sourceKeys);\n    // And finally, send it off to Stellar!\n    return server.submitTransaction(transaction);\n  })\n  .then(function (result) {\n    console.log(\"Success! Results:\", result);\n    msg.payload=\"Success\"+\" https://stellar.expert/explorer/testnet/account/\"+sourceKeys.publicKey();\n    node.send(msg);\n  })\n  .catch(function (error) {\n    console.error(\"Something went wrong!\", error);\n    // If the result is unknown (no response body, timeout etc.) we simply resubmit\n    // already built transaction:\n    // server.submitTransaction(transaction);\n  });",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 950,
+        "y": 1080,
+        "wires": [
+            [
+                "8b75462a.c31e98",
+                "d0047ce0.87b95"
+            ]
+        ]
+    },
+    {
+        "id": "8b75462a.c31e98",
+        "type": "debug",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 1350,
+        "y": 1160,
+        "wires": []
+    },
+    {
+        "id": "970ec8fc.5e3ed8",
+        "type": "telegram sender",
+        "z": "34c774d6.3d64cc",
+        "name": "send question",
+        "bot": "",
+        "haserroroutput": false,
+        "outputs": 1,
+        "x": 1540,
+        "y": 1060,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "50240499.6ee49c",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "Burning TRRT!",
+        "func": "msg.payload.type = 'message';\nvar amount = flow.get('amount',amount);\nmsg.payload.content = \"BURNING \"+amount+\" TRRT!\";\nmsg.payload.options = {reply_to_message_id : msg.payload.messageId}\nvar chatId = -1001473011433;\nmsg.payload.chatId = chatId;\n\nreturn [ msg ];\n",
+        "outputs": "1",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 960,
+        "y": 960,
+        "wires": [
+            [
+                "970ec8fc.5e3ed8"
+            ]
+        ]
+    },
+    {
+        "id": "7eb8b573.a57c6c",
+        "type": "telegram sender",
+        "z": "34c774d6.3d64cc",
+        "name": "send question",
+        "bot": "",
+        "haserroroutput": false,
+        "outputs": 1,
+        "x": 480,
+        "y": 960,
+        "wires": [
+            [
+                "84f804e.9dfe5f8"
+            ]
+        ]
+    },
+    {
+        "id": "84f804e.9dfe5f8",
+        "type": "telegram reply",
+        "z": "34c774d6.3d64cc",
+        "name": "get reply",
+        "bot": "",
+        "x": 655,
+        "y": 960,
+        "wires": [
+            [
+                "61815d5f.fb17d4",
+                "50240499.6ee49c",
+                "c021f3bf.b0835"
+            ]
+        ]
+    },
+    {
+        "id": "800913ee.7c324",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "Secret Key?",
+        "func": "msg.payload.type = 'message';\nmsg.payload.content = 'Secret Key?';\n//msg.payload.options = {reply_to_message_id : msg.payload.messageId}\nvar user = msg.originalMessage.from.id;\nmsg.payload.chatId = user;\nflow.set('user',user);\n\nreturn [ msg ];\n\n/*\nmsg.payload = {\n    chatId: user,\n    type: 'message',\n    content: msg.payload\n}\n*/",
+        "outputs": "1",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 250,
+        "y": 960,
+        "wires": [
+            [
+                "7eb8b573.a57c6c"
+            ]
+        ]
+    },
+    {
+        "id": "afe9e64f.ae79e8",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "plug payload",
+        "func": "msg.payload ={\n   dps : 1,\n    set : msg.payload\n}\n\n/*\n\n    */\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1190,
+        "y": 400,
+        "wires": [
+            [
+                "2644b6d7.c27e4a",
+                "37dd5662.8d809a"
+            ]
+        ]
+    },
+    {
+        "id": "71e1acbc.90bbd4",
+        "type": "change",
+        "z": "34c774d6.3d64cc",
+        "name": "plug on",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "true",
+                "tot": "bool"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1120,
+        "y": 340,
+        "wires": [
+            [
+                "afe9e64f.ae79e8",
+                "f039385c.3b4098",
+                "2abea85d.973b38"
+            ]
+        ]
+    },
+    {
+        "id": "123c1599.5624ca",
+        "type": "change",
+        "z": "34c774d6.3d64cc",
+        "name": "plug off",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "false",
+                "tot": "bool"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1300,
+        "y": 320,
+        "wires": [
+            [
+                "afe9e64f.ae79e8",
+                "f039385c.3b4098",
+                "777d9662.222908"
+            ]
+        ]
+    },
+    {
+        "id": "c242c743.7c5c48",
+        "type": "inject",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 120,
+        "y": 100,
+        "wires": [
+            [
+                "2abfa9c2.42ff86"
+            ]
+        ]
+    },
+    {
+        "id": "a244e8e4.d25f78",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "store chatid",
+        "func": "var chatId = msg.payload.chatId;\nflow.set('chatId',chatId);",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 230,
+        "y": 640,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "6c4bbc19.2efb64",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "Create message",
+        "func": "var chatId = flow.get('chatId',chatId)\nmsg.payload = {\n    chatId: chatId,\n    type: 'message',\n    content: \"BURN BABY BURN\"\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1140,
+        "y": 100,
+        "wires": [
+            [
+                "217b4ddf.c78122"
+            ]
+        ]
+    },
+    {
+        "id": "217b4ddf.c78122",
+        "type": "telegram sender",
+        "z": "34c774d6.3d64cc",
+        "name": "send msg",
+        "bot": "",
+        "haserroroutput": false,
+        "outputs": 1,
+        "x": 1380,
+        "y": 100,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "2644b6d7.c27e4a",
+        "type": "tuya-smart-device",
+        "z": "34c774d6.3d64cc",
+        "deviceName": "Monitor Plug",
+        "deviceId": "",
+        "deviceKey": "",
+        "deviceIp": "",
+        "retryTimeout": "1000",
+        "findTimeout": "1000",
+        "tuyaVersion": "3.1",
+        "x": 1370,
+        "y": 400,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "37dd5662.8d809a",
+        "type": "tuya-smart-device",
+        "z": "34c774d6.3d64cc",
+        "deviceName": "Monitor Plug",
+        "deviceId": "",
+        "deviceKey": "",
+        "deviceIp": "",
+        "retryTimeout": "1000",
+        "findTimeout": "1000",
+        "tuyaVersion": "3.1",
+        "x": 1370,
+        "y": 460,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "36cfd04f.75a0a",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "func": "msg.payload ={\n   dps : 1,\n    set : true\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 260,
+        "y": 480,
+        "wires": [
+            [
+                "2644b6d7.c27e4a",
+                "37dd5662.8d809a"
+            ]
+        ]
+    },
+    {
+        "id": "40904083.c4fc1",
+        "type": "inject",
+        "z": "34c774d6.3d64cc",
+        "name": "FLAME ON",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 480,
+        "wires": [
+            [
+                "36cfd04f.75a0a"
+            ]
+        ]
+    },
+    {
+        "id": "c44e2164.5ec7",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "func": "msg.payload ={\n   dps : 1,\n    set : false\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 260,
+        "y": 540,
+        "wires": [
+            [
+                "2644b6d7.c27e4a",
+                "37dd5662.8d809a"
+            ]
+        ]
+    },
+    {
+        "id": "35e44563.3ee96a",
+        "type": "inject",
+        "z": "34c774d6.3d64cc",
+        "name": "FLAME OFF",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 540,
+        "wires": [
+            [
+                "c44e2164.5ec7"
+            ]
+        ]
+    },
+    {
+        "id": "2a1c4fb8.428a8",
+        "type": "switch",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "property": "flamearm",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 970,
+        "y": 240,
+        "wires": [
+            [
+                "71e1acbc.90bbd4"
+            ],
+            [
+                "1bbba4b0.745c4b"
+            ]
+        ]
+    },
+    {
+        "id": "dff33180.36761",
+        "type": "inject",
+        "z": "34c774d6.3d64cc",
+        "name": "FLAME ARM TOGGLE",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 140,
+        "y": 280,
+        "wires": [
+            [
+                "9380b8cd.4bf7b8"
+            ]
+        ]
+    },
+    {
+        "id": "9380b8cd.4bf7b8",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "set flamearm var",
+        "func": "var flamearm = flow.get('flamearm',flamearm)\n\nif(flamearm === 0){\n    flamearm = 1;\n}\nelse {\n    flamearm = 0\n}\n\nflow.set('flamearm',flamearm)\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "// Code added here will be run once\n// whenever the node is deployed.\nvar flamearm = 0\nflow.set('flamearm',flamearm)",
+        "finalize": "",
+        "x": 350,
+        "y": 280,
+        "wires": [
+            [
+                "829b8ffc.493f8"
+            ]
+        ]
+    },
+    {
+        "id": "1bbba4b0.745c4b",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "Create message",
+        "func": "var chatId = flow.get('chatId',chatId)\nmsg.payload = {\n    chatId: chatId,\n    type: 'message',\n    content: \"FLAMES CURRENTLY DISARMED\"\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 760,
+        "y": 320,
+        "wires": [
+            [
+                "1da9052c.07119b"
+            ]
+        ]
+    },
+    {
+        "id": "1da9052c.07119b",
+        "type": "telegram sender",
+        "z": "34c774d6.3d64cc",
+        "name": "send msg",
+        "bot": "",
+        "haserroroutput": false,
+        "outputs": 1,
+        "x": 920,
+        "y": 320,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ea05824c.85bd",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "FLAMES ARMED",
+        "func": "//var chatId = flow.get('chatId',chatId)\nmsg.payload = {\n    chatId: \"-1001473011433\",\n    type: 'message',\n    content: \"FLAMES ARMED!\"\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 330,
+        "y": 360,
+        "wires": [
+            [
+                "d2048653.f56708"
+            ]
+        ]
+    },
+    {
+        "id": "d2048653.f56708",
+        "type": "telegram sender",
+        "z": "34c774d6.3d64cc",
+        "name": "send msg",
+        "bot": "",
+        "haserroroutput": false,
+        "outputs": 1,
+        "x": 520,
+        "y": 360,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "7bc75688.10d5f8",
+        "type": "sqlite",
+        "z": "fece67b7.0fd7b8",
+        "mydb": "",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "",
+        "x": 590,
+        "y": 260,
+        "wires": [
+            [
+                "22add297.10664e",
+                "522ec971.935fe8"
+            ]
+        ]
+    },
+    {
+        "id": "9819f41.7ab5308",
+        "type": "inject",
+        "z": "fece67b7.0fd7b8",
+        "name": "CREATE",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "CREATE TABLE TeleUsers(id INTEGER, public TEXT, private TEXT, trrt NUMERIC)",
+        "payload": "",
+        "payloadType": "date",
+        "x": 140,
+        "y": 100,
+        "wires": [
+            [
+                "2d5094b7.c1f91c"
+            ]
+        ]
+    },
+    {
+        "id": "d4bbaf4e.2603a",
+        "type": "inject",
+        "z": "fece67b7.0fd7b8",
+        "name": "INSERT",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "INSERT INTO TeleUsersTest(id, public, private) values(358, \"WZAH51\", \"lK257\")",
+        "payload": "",
+        "payloadType": "date",
+        "x": 140,
+        "y": 140,
+        "wires": [
+            [
+                "7bc75688.10d5f8"
+            ]
+        ]
+    },
+    {
+        "id": "b4b746d3.657998",
+        "type": "inject",
+        "z": "fece67b7.0fd7b8",
+        "name": "SELECT",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "SELECT * FROM TeleUsersTest",
+        "payload": "",
+        "payloadType": "date",
+        "x": 140,
+        "y": 180,
+        "wires": [
+            [
+                "7bc75688.10d5f8"
+            ]
+        ]
+    },
+    {
+        "id": "8d1a9bda.9f6a38",
+        "type": "inject",
+        "z": "fece67b7.0fd7b8",
+        "name": "DELETE",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "DELETE from TeleUsersTest",
+        "payload": "",
+        "payloadType": "date",
+        "x": 140,
+        "y": 220,
+        "wires": [
+            [
+                "7bc75688.10d5f8"
+            ]
+        ]
+    },
+    {
+        "id": "e4aef7ba.21bd88",
+        "type": "inject",
+        "z": "fece67b7.0fd7b8",
+        "name": "DROP",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "DROP TABLE TeleUsersTest",
+        "payload": "",
+        "payloadType": "date",
+        "x": 130,
+        "y": 260,
+        "wires": [
+            [
+                "7bc75688.10d5f8"
+            ]
+        ]
+    },
+    {
+        "id": "22add297.10664e",
+        "type": "debug",
+        "z": "fece67b7.0fd7b8",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 790,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "7399496b.c08548",
+        "type": "inject",
+        "z": "fece67b7.0fd7b8",
+        "name": "SELECT 357",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "SELECT * FROM TeleUsersTest WHERE id=357",
+        "payload": "",
+        "payloadType": "date",
+        "x": 130,
+        "y": 460,
+        "wires": [
+            [
+                "7bc75688.10d5f8"
+            ]
+        ]
+    },
+    {
+        "id": "a0cc81e4.4f98b",
+        "type": "inject",
+        "z": "fece67b7.0fd7b8",
+        "name": "user 358",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "v": "358",
+                "vt": "num"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "356",
+        "payloadType": "num",
+        "x": 120,
+        "y": 540,
+        "wires": [
+            [
+                "ce55b912.a85468"
+            ]
+        ]
+    },
+    {
+        "id": "e7a24e6a.083c7",
+        "type": "inject",
+        "z": "fece67b7.0fd7b8",
+        "name": "SELECT user",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "SELECT * FROM TeleUsersTest WHERE id=user",
+        "payload": "",
+        "payloadType": "date",
+        "x": 130,
+        "y": 500,
+        "wires": [
+            [
+                "2409c21c.d8398e"
+            ]
+        ]
+    },
+    {
+        "id": "ce55b912.a85468",
+        "type": "function",
+        "z": "fece67b7.0fd7b8",
+        "name": "",
+        "func": "var user = msg.payload\nflow.set('user',user)\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 300,
+        "y": 540,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "2409c21c.d8398e",
+        "type": "function",
+        "z": "fece67b7.0fd7b8",
+        "name": "",
+        "func": "var user = flow.get('user',user)\nmsg.topic = \"SELECT * FROM TeleUsersTest WHERE id=\"+user\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 300,
+        "y": 500,
+        "wires": [
+            [
+                "7bc75688.10d5f8"
+            ]
+        ]
+    },
+    {
+        "id": "522ec971.935fe8",
+        "type": "function",
+        "z": "fece67b7.0fd7b8",
+        "name": "",
+        "func": "var public = msg.payload[0].public\nvar private = msg.payload[0].private\nflow.set('public',public)\nflow.set('private',private)\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 780,
+        "y": 320,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "2d5094b7.c1f91c",
+        "type": "sqlite",
+        "z": "fece67b7.0fd7b8",
+        "mydb": "29235876.a28e58",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "",
+        "x": 600,
+        "y": 540,
+        "wires": [
+            [
+                "22add297.10664e"
+            ]
+        ]
+    },
+    {
+        "id": "829b8ffc.493f8",
+        "type": "switch",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "property": "flamearm",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 150,
+        "y": 340,
+        "wires": [
+            [
+                "ea05824c.85bd"
+            ],
+            [
+                "b943d62d.57f168"
+            ]
+        ]
+    },
+    {
+        "id": "b943d62d.57f168",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "FLAMES DISAMRED",
+        "func": "//var chatId = flow.get('chatId',chatId)\nmsg.payload = {\n    chatId: \"-1001473011433\",\n    type: 'message',\n    content: \"BURNINATOR DISARMED\"\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 340,
+        "y": 400,
+        "wires": [
+            [
+                "d2048653.f56708"
+            ]
+        ]
+    },
+    {
+        "id": "5017ccd8.4ef9b4",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "check for secret",
+        "func": "var user = msg.originalMessage.from.id;\nmsg.payload.chatId = user;\nflow.set('user',user);\n\nmsg.topic = \"SELECT * FROM TeleUsers WHERE id=\"+user\n\n\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 840,
+        "y": 760,
+        "wires": [
+            [
+                "8dbc1cff.023fb"
+            ]
+        ]
+    },
+    {
+        "id": "a2ec5497.cd8948",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "retrieve secret",
+        "func": "msg.payload.content=msg.payload[0].private\nmsg.topic=msg.payload[0].private\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 740,
+        "y": 840,
+        "wires": [
+            [
+                "61815d5f.fb17d4",
+                "cdd65934.554588",
+                "620ed7bf.5b91c8",
+                "67c89cbc.404224",
+                "b8ba292a.8532b8"
+            ]
+        ]
+    },
+    {
+        "id": "8dbc1cff.023fb",
+        "type": "sqlite",
+        "z": "34c774d6.3d64cc",
+        "mydb": "29235876.a28e58",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "TelegramUsers",
+        "x": 1040,
+        "y": 760,
+        "wires": [
+            [
+                "da7be3ea.7cfc3"
+            ]
+        ]
+    },
+    {
+        "id": "da7be3ea.7cfc3",
+        "type": "switch",
+        "z": "34c774d6.3d64cc",
+        "name": "get secret",
+        "property": "payload[0].id",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "user",
+                "vt": "flow"
+            },
+            {
+                "t": "null"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 320,
+        "y": 840,
+        "wires": [
+            [
+                "a2ec5497.cd8948",
+                "ee9e3bb1.5b7b18"
+            ],
+            [
+                "800913ee.7c324"
+            ]
+        ]
+    },
+    {
+        "id": "cdd65934.554588",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "Burning TRRT!",
+        "func": "msg.payload.type = 'message';\nvar amount = flow.get('amount',amount);\nmsg.payload.content = \"BURNING \"+amount+\" TRRT!\";\n//msg.payload.options = {reply_to_message_id : msg.payload.messageId}\nvar chatId = -1001473011433;\nmsg.payload.chatId = chatId;\n\nreturn [ msg ];\n\n/*\nmsg.payload = {\n    chatId: user,\n    type: 'message',\n    content: msg.payload\n}\n*/",
+        "outputs": "1",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 960,
+        "y": 840,
+        "wires": [
+            [
+                "970ec8fc.5e3ed8",
+                "620ed7bf.5b91c8"
+            ]
+        ]
+    },
+    {
+        "id": "9c9d8516.c3cac8",
+        "type": "inject",
+        "z": "fece67b7.0fd7b8",
+        "name": "DELETE",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "DELETE from TeleUsers",
+        "payload": "",
+        "payloadType": "date",
+        "x": 120,
+        "y": 580,
+        "wires": [
+            [
+                "2d5094b7.c1f91c"
+            ]
+        ]
+    },
+    {
+        "id": "afb195fe.451118",
+        "type": "inject",
+        "z": "fece67b7.0fd7b8",
+        "name": "SELECT",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "SELECT * FROM TeleUsers",
+        "payload": "",
+        "payloadType": "date",
+        "x": 120,
+        "y": 620,
+        "wires": [
+            [
+                "2d5094b7.c1f91c"
+            ]
+        ]
+    },
+    {
+        "id": "b0283b06.583c68",
+        "type": "sqlite",
+        "z": "34c774d6.3d64cc",
+        "mydb": "29235876.a28e58",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "TelegramUsers",
+        "x": 480,
+        "y": 1060,
+        "wires": [
+            [
+                "c6348d6c.b4c73"
+            ]
+        ]
+    },
+    {
+        "id": "c021f3bf.b0835",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "add user",
+        "func": "var user = flow.get('user',user);\n//var public = flow.get('public',public);\nvar private = msg.payload.content;\n\nvar StellarSdk = global.get(\"stellarsdk\");\nvar server = new StellarSdk.Server(\"https://horizon-testnet.stellar.org\");\nvar sourceKeys = StellarSdk.Keypair.fromSecret(private);\nvar public = sourceKeys.publicKey();\n\nmsg.topic = \"INSERT INTO TeleUsers(id, public, private) values(\"+user+\", \"+'\"'+public+'\", '+'\"'+private+'\")'\n\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 300,
+        "y": 1060,
+        "wires": [
+            [
+                "b0283b06.583c68",
+                "812d790e.eedc48"
+            ]
+        ]
+    },
+    {
+        "id": "c6348d6c.b4c73",
+        "type": "debug",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 670,
+        "y": 1060,
+        "wires": []
+    },
+    {
+        "id": "812d790e.eedc48",
+        "type": "debug",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 480,
+        "y": 1140,
+        "wires": []
+    },
+    {
+        "id": "663f7242.e70b9c",
+        "type": "rpi-gpio out",
+        "z": "118e52da.1ff74d",
+        "name": "Fire",
+        "pin": "16",
+        "set": true,
+        "level": "0",
+        "freq": "",
+        "out": "out",
+        "x": 1750,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "89f880de.4bf78",
+        "type": "delay",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": ".5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 1400,
+        "y": 240,
+        "wires": [
+            [
+                "4f505f41.e063d"
+            ]
+        ]
+    },
+    {
+        "id": "4f505f41.e063d",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "disengage firing pin",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "0",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1570,
+        "y": 240,
+        "wires": [
+            [
+                "663f7242.e70b9c"
+            ]
+        ]
+    },
+    {
+        "id": "3e2de3f1.cc906c",
+        "type": "rpi-gpio out",
+        "z": "118e52da.1ff74d",
+        "name": "DOWN",
+        "pin": "36",
+        "set": true,
+        "level": "0",
+        "freq": "",
+        "out": "out",
+        "x": 1560,
+        "y": 1340,
+        "wires": []
+    },
+    {
+        "id": "f9edfd11.27042",
+        "type": "rpi-gpio out",
+        "z": "118e52da.1ff74d",
+        "name": "UP",
+        "pin": "38",
+        "set": true,
+        "level": "0",
+        "freq": "",
+        "out": "out",
+        "x": 1570,
+        "y": 1180,
+        "wires": []
+    },
+    {
+        "id": "590b2b3e.3da0d4",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "0",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1160,
+        "y": 1260,
+        "wires": [
+            [
+                "f9edfd11.27042"
+            ]
+        ]
+    },
+    {
+        "id": "88c8de50.d3e75",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "0",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1160,
+        "y": 1340,
+        "wires": [
+            [
+                "3e2de3f1.cc906c"
+            ]
+        ]
+    },
+    {
+        "id": "280ba3f4.68710c",
+        "type": "delay",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": ".5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 1140,
+        "y": 1180,
+        "wires": [
+            [
+                "52e88de5.0457c4"
+            ]
+        ]
+    },
+    {
+        "id": "52e88de5.0457c4",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "reset",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "0",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1310,
+        "y": 1180,
+        "wires": [
+            [
+                "3e2de3f1.cc906c",
+                "f9edfd11.27042"
+            ]
+        ]
+    },
+    {
+        "id": "7b9c4003.830aa",
+        "type": "telegram command",
+        "z": "118e52da.1ff74d",
+        "name": "FIRE",
+        "command": "/fire",
+        "bot": "",
+        "strict": false,
+        "hasresponse": true,
+        "useregex": false,
+        "removeregexcommand": false,
+        "outputs": 2,
+        "x": 130,
+        "y": 340,
+        "wires": [
+            [
+                "cac9897e.2362f8"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "62023297.8bd56c",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "firing string",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "FIRING!",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1330,
+        "y": 280,
+        "wires": [
+            [
+                "7b2df8d4.827cf8"
+            ]
+        ]
+    },
+    {
+        "id": "36df905f.4cfca",
+        "type": "inject",
+        "z": "118e52da.1ff74d",
+        "name": "firing inject",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "firing",
+        "payloadType": "str",
+        "x": 140,
+        "y": 300,
+        "wires": [
+            [
+                "62023297.8bd56c"
+            ]
+        ]
+    },
+    {
+        "id": "83fc55ae.bfbda8",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "firing pin",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "1",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1400,
+        "y": 200,
+        "wires": [
+            [
+                "663f7242.e70b9c",
+                "cb9d9e73.67aef"
+            ]
+        ]
+    },
+    {
+        "id": "fd1d3690.803668",
+        "type": "telegram command",
+        "z": "118e52da.1ff74d",
+        "name": "DOWN",
+        "command": "/down",
+        "bot": "",
+        "strict": false,
+        "hasresponse": true,
+        "useregex": false,
+        "removeregexcommand": false,
+        "outputs": 2,
+        "x": 150,
+        "y": 1260,
+        "wires": [
+            [
+                "514a0713.377288"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "7f971203.6d05cc",
+        "type": "telegram command",
+        "z": "118e52da.1ff74d",
+        "name": "UP",
+        "command": "/up",
+        "bot": "",
+        "strict": false,
+        "hasresponse": false,
+        "useregex": false,
+        "removeregexcommand": false,
+        "outputs": 1,
+        "x": 150,
+        "y": 1300,
+        "wires": [
+            [
+                "a86a780c.5d92b8"
+            ]
+        ]
+    },
+    {
+        "id": "9f01523b.776e9",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "down string",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "to the floor",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1330,
+        "y": 1440,
+        "wires": [
+            [
+                "7b2df8d4.827cf8"
+            ]
+        ]
+    },
+    {
+        "id": "8dd276da.faba98",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "up string",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "to the sky",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1320,
+        "y": 1400,
+        "wires": [
+            [
+                "7b2df8d4.827cf8"
+            ]
+        ]
+    },
+    {
+        "id": "7b2df8d4.827cf8",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "Create message",
+        "func": "msg.payload = {\n    chatId: '-1001473011433',\n    type: 'message',\n    content: msg.payload\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 2440,
+        "y": 1520,
+        "wires": [
+            [
+                "3cea4394.ee83ac"
+            ]
+        ]
+    },
+    {
+        "id": "3cea4394.ee83ac",
+        "type": "telegram sender",
+        "z": "118e52da.1ff74d",
+        "name": "send msg",
+        "bot": "",
+        "haserroroutput": false,
+        "outputs": 1,
+        "x": 2620,
+        "y": 1460,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "8d621995.bda058",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "1",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1160,
+        "y": 1300,
+        "wires": [
+            [
+                "f9edfd11.27042"
+            ]
+        ]
+    },
+    {
+        "id": "7df14f99.74a9a",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "1",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1160,
+        "y": 1220,
+        "wires": [
+            [
+                "3e2de3f1.cc906c"
+            ]
+        ]
+    },
+    {
+        "id": "6eb99d3c.e6ad24",
+        "type": "telegram command",
+        "z": "118e52da.1ff74d",
+        "name": "TEST",
+        "command": "/test",
+        "bot": "",
+        "strict": false,
+        "hasresponse": true,
+        "useregex": false,
+        "removeregexcommand": false,
+        "outputs": 2,
+        "x": 150,
+        "y": 1520,
+        "wires": [
+            [
+                "2d5b107c.fa3bb"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "2d5b107c.fa3bb",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "test string",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "At the ready, sir.",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1320,
+        "y": 1520,
+        "wires": [
+            [
+                "7b2df8d4.827cf8"
+            ]
+        ]
+    },
+    {
+        "id": "5776d829.d17248",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "check counter",
+        "func": "var count=context.get('count');\nif (typeof count==\"undefined\")\ncount=0;\ncount=count+1\nmsg.payload=\"Checked \" +count +\" times\"\ncontext.set('count',count);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 600,
+        "y": 1640,
+        "wires": [
+            [
+                "7b2df8d4.827cf8"
+            ]
+        ]
+    },
+    {
+        "id": "6cab842d.a0376c",
+        "type": "telegram command",
+        "z": "118e52da.1ff74d",
+        "name": "CHECK",
+        "command": "/check",
+        "bot": "",
+        "strict": false,
+        "hasresponse": true,
+        "useregex": false,
+        "removeregexcommand": false,
+        "outputs": 2,
+        "x": 150,
+        "y": 1620,
+        "wires": [
+            [
+                "5776d829.d17248"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "4027c8f8.b4ea38",
+        "type": "inject",
+        "z": "118e52da.1ff74d",
+        "name": "CHECK inject",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "firing",
+        "payloadType": "str",
+        "x": 170,
+        "y": 1680,
+        "wires": [
+            [
+                "5776d829.d17248"
+            ]
+        ]
+    },
+    {
+        "id": "408af8d8.ccb9a8",
+        "type": "rpi-gpio out",
+        "z": "118e52da.1ff74d",
+        "name": "Left",
+        "pin": "7",
+        "set": true,
+        "level": "0",
+        "freq": "",
+        "out": "out",
+        "x": 1430,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "38929e71.46c992",
+        "type": "rpi-gpio out",
+        "z": "118e52da.1ff74d",
+        "name": "Right",
+        "pin": "13",
+        "set": true,
+        "level": "0",
+        "freq": "",
+        "out": "out",
+        "x": 1430,
+        "y": 940,
+        "wires": []
+    },
+    {
+        "id": "a3a9efb7.bfc04",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "0",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1160,
+        "y": 820,
+        "wires": [
+            [
+                "38929e71.46c992"
+            ]
+        ]
+    },
+    {
+        "id": "9665061b.260fc8",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "0",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1160,
+        "y": 900,
+        "wires": [
+            [
+                "408af8d8.ccb9a8"
+            ]
+        ]
+    },
+    {
+        "id": "9e638757.c084e8",
+        "type": "delay",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "2",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 1140,
+        "y": 940,
+        "wires": [
+            [
+                "c62ca19c.8e1d4"
+            ]
+        ]
+    },
+    {
+        "id": "c62ca19c.8e1d4",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "reset",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "0",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1270,
+        "y": 940,
+        "wires": [
+            [
+                "408af8d8.ccb9a8",
+                "38929e71.46c992"
+            ]
+        ]
+    },
+    {
+        "id": "e9923963.d0d538",
+        "type": "telegram command",
+        "z": "118e52da.1ff74d",
+        "name": "LEFT",
+        "command": "/left",
+        "bot": "",
+        "strict": false,
+        "hasresponse": false,
+        "useregex": false,
+        "removeregexcommand": false,
+        "outputs": 1,
+        "x": 150,
+        "y": 820,
+        "wires": [
+            [
+                "e602b26a.84c3e"
+            ]
+        ]
+    },
+    {
+        "id": "c8af19ce.5a7e88",
+        "type": "telegram command",
+        "z": "118e52da.1ff74d",
+        "name": "RIGHT",
+        "command": "/right",
+        "bot": "",
+        "strict": false,
+        "hasresponse": false,
+        "useregex": false,
+        "removeregexcommand": false,
+        "outputs": 1,
+        "x": 150,
+        "y": 880,
+        "wires": [
+            [
+                "3c853479.36171c"
+            ]
+        ]
+    },
+    {
+        "id": "2d33b618.efd87a",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "1",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1160,
+        "y": 780,
+        "wires": [
+            [
+                "408af8d8.ccb9a8"
+            ]
+        ]
+    },
+    {
+        "id": "e9abd25e.9a6a8",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "1",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1160,
+        "y": 860,
+        "wires": [
+            [
+                "38929e71.46c992"
+            ]
+        ]
+    },
+    {
+        "id": "514a0713.377288",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "0",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 380,
+        "y": 1260,
+        "wires": [
+            [
+                "ff22d68f.879c68"
+            ]
+        ]
+    },
+    {
+        "id": "ff22d68f.879c68",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "Limit Check",
+        "func": "var y=context.get('y');\nif (typeof y==\"undefined\")\ny=0;\nvar msg2 = { payload: y }\nif (msg.payload === 0 & y > -999) {\n    y=y-1\n    msg2.payload = y\n    context.set('y',y);\n    return [msg, msg2];\n}\nif (msg.payload === 1 & y < 999) {\n    y=y+1\n    msg2.payload = y\n    context.set('y',y);\n    return [msg, msg2];\n}\nif (msg.payload === 0 & y === -999) {\n    msg2.payload = y\n    context.set('y',y);\n    return [null, msg2];\n}\nif (msg.payload === 1 & y === 999) {\n    msg2.payload = y\n    context.set('y',y);\n    return [null, msg2];\n}\n",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 650,
+        "y": 1280,
+        "wires": [
+            [
+                "74c02847.9c9a68"
+            ],
+            [
+                "d6166815.a295b8"
+            ]
+        ]
+    },
+    {
+        "id": "a86a780c.5d92b8",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "1",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 380,
+        "y": 1300,
+        "wires": [
+            [
+                "ff22d68f.879c68"
+            ]
+        ]
+    },
+    {
+        "id": "74c02847.9c9a68",
+        "type": "switch",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "num"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 850,
+        "y": 1280,
+        "wires": [
+            [
+                "7df14f99.74a9a",
+                "590b2b3e.3da0d4",
+                "280ba3f4.68710c",
+                "9f01523b.776e9"
+            ],
+            [
+                "8dd276da.faba98",
+                "8d621995.bda058",
+                "88c8de50.d3e75",
+                "280ba3f4.68710c"
+            ]
+        ]
+    },
+    {
+        "id": "d6166815.a295b8",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "Y coord message",
+        "func": "msg.payload=\"Y = \" + msg.payload\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1350,
+        "y": 1560,
+        "wires": [
+            [
+                "7b2df8d4.827cf8"
+            ]
+        ]
+    },
+    {
+        "id": "972a246c.614098",
+        "type": "inject",
+        "z": "118e52da.1ff74d",
+        "name": "LEFT inject",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "firing",
+        "payloadType": "str",
+        "x": 160,
+        "y": 760,
+        "wires": [
+            [
+                "2d33b618.efd87a",
+                "a3a9efb7.bfc04",
+                "9e638757.c084e8"
+            ]
+        ]
+    },
+    {
+        "id": "7217ba66.e59584",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "send command",
+        "func": "var x=context.get('arm');\nif (typeof arm==\"undefined\")\narm=0;\nif (typeof adminarm==\"undefined\")\nadminarm=0;\ncontext.set('adminarm',adminarm);\nif (msg.payload === 0 & arm === 0) {\n    context.set('arm',arm);\n    msg.payload = 4;\n    return msg;\n}\nif (msg.payload === 0 & arm === 1 & adminarm === 1) {\n    context.set('arm',arm);\n    return msg;\n}\nif (msg.payload === 1) {\n    arm = 0\n    context.set('arm',arm);\n    return msg;\n}\nif (msg.payload === 2 & arm === 0) {\n    context.set('arm',arm);\n    return msg;\n}\nif (msg.payload === 3) {\n    arm = 1\n    context.set('arm',arm);\n    return msg;\n}\nif (msg.payload === 2 & arm === 1) {\n    context.set('arm',arm);\n    msg.payload = 5;\n    return msg;\n}\nif (msg.payload === 6) {\n    adminarm = 1;\n    context.set('adminarm',adminarm);\n    return msg;\n}\nif (msg.payload === 7) {\n    adminarm = 0;\n    context.set('adminarm',adminarm);\n    return msg;\n}\nif (msg.payload === 0 & adminarm ===0) {\n    msg.payload = 8;\n    return msg;\n}",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 640,
+        "y": 440,
+        "wires": [
+            [
+                "a2646bdb.a30a78",
+                "34f3883d.f1c218"
+            ]
+        ]
+    },
+    {
+        "id": "1d20dbf1.1d4e14",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "fire=0",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "0",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 310,
+        "y": 240,
+        "wires": [
+            [
+                "7217ba66.e59584"
+            ]
+        ]
+    },
+    {
+        "id": "6acb6e0c.8da49",
+        "type": "telegram command",
+        "z": "118e52da.1ff74d",
+        "name": "DISARM",
+        "command": "/disarm",
+        "bot": "",
+        "strict": false,
+        "hasresponse": true,
+        "useregex": false,
+        "removeregexcommand": false,
+        "outputs": 2,
+        "x": 140,
+        "y": 400,
+        "wires": [
+            [
+                "9bc39c8b.d2248"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "b4be6986.f710b8",
+        "type": "telegram command",
+        "z": "118e52da.1ff74d",
+        "name": "ARM",
+        "command": "/arm",
+        "bot": "",
+        "strict": false,
+        "hasresponse": true,
+        "useregex": false,
+        "removeregexcommand": false,
+        "outputs": 2,
+        "x": 130,
+        "y": 460,
+        "wires": [
+            [
+                "d40567f7.1d0558"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "9bc39c8b.d2248",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "disarm=1",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "1",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 340,
+        "y": 400,
+        "wires": [
+            [
+                "7217ba66.e59584"
+            ]
+        ]
+    },
+    {
+        "id": "d40567f7.1d0558",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "arm=2",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "2",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 330,
+        "y": 460,
+        "wires": [
+            [
+                "7217ba66.e59584"
+            ]
+        ]
+    },
+    {
+        "id": "a2646bdb.a30a78",
+        "type": "switch",
+        "z": "118e52da.1ff74d",
+        "name": "0=fire 1=disarm \\n 2=arm 3=disarm \\n 4=already armed \\n 5=",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "2",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "4",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "5",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "6",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "7",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "8",
+                "vt": "num"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 8,
+        "x": 970,
+        "y": 400,
+        "wires": [
+            [
+                "62023297.8bd56c",
+                "83fc55ae.bfbda8",
+                "89f880de.4bf78",
+                "9676732e.ae53",
+                "cd78bd0d.722e7"
+            ],
+            [
+                "b871a7e8.566c58"
+            ],
+            [
+                "ee128530.f95178"
+            ],
+            [
+                "346277d.d3ef188"
+            ],
+            [
+                "402b0387.44583c"
+            ],
+            [
+                "6f98bd7.f461a44"
+            ],
+            [
+                "1f697240.86ee1e"
+            ],
+            [
+                "1f697240.86ee1e"
+            ]
+        ]
+    },
+    {
+        "id": "ee128530.f95178",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "arming  in string",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "Arming in...",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1340,
+        "y": 360,
+        "wires": [
+            [
+                "7b2df8d4.827cf8",
+                "802f24cc.ecbe08"
+            ]
+        ]
+    },
+    {
+        "id": "b871a7e8.566c58",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "disarm string",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "Disarmed",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1330,
+        "y": 320,
+        "wires": [
+            [
+                "7b2df8d4.827cf8"
+            ]
+        ]
+    },
+    {
+        "id": "a67391e0.7abcb",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "=3",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "3",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1670,
+        "y": 360,
+        "wires": [
+            [
+                "17aab414.396fac",
+                "7b2df8d4.827cf8"
+            ]
+        ]
+    },
+    {
+        "id": "17aab414.396fac",
+        "type": "delay",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "1",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 1620,
+        "y": 400,
+        "wires": [
+            [
+                "b3287806.2ee1b8"
+            ]
+        ]
+    },
+    {
+        "id": "b3287806.2ee1b8",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "=2",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "2",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1750,
+        "y": 400,
+        "wires": [
+            [
+                "699d879a.d49638",
+                "7b2df8d4.827cf8"
+            ]
+        ]
+    },
+    {
+        "id": "699d879a.d49638",
+        "type": "delay",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "1",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 1660,
+        "y": 440,
+        "wires": [
+            [
+                "5d8e890f.18a918"
+            ]
+        ]
+    },
+    {
+        "id": "5d8e890f.18a918",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "=1",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "1",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1790,
+        "y": 440,
+        "wires": [
+            [
+                "ad9ee533.6e4488",
+                "7b2df8d4.827cf8"
+            ]
+        ]
+    },
+    {
+        "id": "ad9ee533.6e4488",
+        "type": "delay",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "1",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 1720,
+        "y": 480,
+        "wires": [
+            [
+                "5872e551.6d6fac"
+            ]
+        ]
+    },
+    {
+        "id": "5872e551.6d6fac",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "Ready to Fire",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "Ready to fire",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1880,
+        "y": 480,
+        "wires": [
+            [
+                "7b2df8d4.827cf8",
+                "e55f0621.819a38"
+            ]
+        ]
+    },
+    {
+        "id": "e55f0621.819a38",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "=3",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "3",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 350,
+        "y": 500,
+        "wires": [
+            [
+                "7217ba66.e59584"
+            ]
+        ]
+    },
+    {
+        "id": "346277d.d3ef188",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "disarmed string",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "Currently Disarmed",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1340,
+        "y": 400,
+        "wires": [
+            [
+                "7b2df8d4.827cf8"
+            ]
+        ]
+    },
+    {
+        "id": "802f24cc.ecbe08",
+        "type": "delay",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "1",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 1540,
+        "y": 360,
+        "wires": [
+            [
+                "a67391e0.7abcb"
+            ]
+        ]
+    },
+    {
+        "id": "402b0387.44583c",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "already armed string",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "Already armed",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1360,
+        "y": 440,
+        "wires": [
+            [
+                "7b2df8d4.827cf8"
+            ]
+        ]
+    },
+    {
+        "id": "d3b4c627.8d4e28",
+        "type": "inject",
+        "z": "118e52da.1ff74d",
+        "name": "DOWN inject",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "firing",
+        "payloadType": "str",
+        "x": 170,
+        "y": 1180,
+        "wires": [
+            [
+                "7df14f99.74a9a",
+                "590b2b3e.3da0d4",
+                "280ba3f4.68710c",
+                "9f01523b.776e9"
+            ]
+        ]
+    },
+    {
+        "id": "ebc782f0.c455d",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "admindisarm=7",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "7",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 360,
+        "y": 580,
+        "wires": [
+            [
+                "7217ba66.e59584"
+            ]
+        ]
+    },
+    {
+        "id": "643d27d.5ad17d8",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "adminarm=6",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "6",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 350,
+        "y": 640,
+        "wires": [
+            [
+                "7217ba66.e59584"
+            ]
+        ]
+    },
+    {
+        "id": "6f98bd7.f461a44",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "Admin armed string",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "Admin Armed",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1350,
+        "y": 480,
+        "wires": [
+            [
+                "7b2df8d4.827cf8"
+            ]
+        ]
+    },
+    {
+        "id": "1f697240.86ee1e",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "admin disarmed string",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "Admin Disarmed",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1360,
+        "y": 520,
+        "wires": [
+            [
+                "7b2df8d4.827cf8"
+            ]
+        ]
+    },
+    {
+        "id": "5eaf948f.2013bc",
+        "type": "inject",
+        "z": "118e52da.1ff74d",
+        "name": "ADMIN DISARM",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 180,
+        "y": 580,
+        "wires": [
+            [
+                "ebc782f0.c455d"
+            ]
+        ]
+    },
+    {
+        "id": "b935aff2.2d9db",
+        "type": "inject",
+        "z": "118e52da.1ff74d",
+        "name": "ADMIN ARM",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 150,
+        "y": 640,
+        "wires": [
+            [
+                "643d27d.5ad17d8"
+            ]
+        ]
+    },
+    {
+        "id": "c6e0d243.2e54e",
+        "type": "telegram command",
+        "z": "118e52da.1ff74d",
+        "name": "HELP",
+        "command": "/help",
+        "bot": "",
+        "strict": false,
+        "hasresponse": false,
+        "useregex": false,
+        "removeregexcommand": false,
+        "outputs": 1,
+        "x": 150,
+        "y": 1420,
+        "wires": [
+            [
+                "dbdaf148.438b5",
+                "771f235.904d2dc"
+            ]
+        ]
+    },
+    {
+        "id": "dbdaf148.438b5",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "help string",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "/fire /left /right /up /down /arm /disarm /test /help",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1330,
+        "y": 1480,
+        "wires": [
+            [
+                "7b2df8d4.827cf8"
+            ]
+        ]
+    },
+    {
+        "id": "771f235.904d2dc",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "keyboard",
+        "func": "var opts = {\n  reply_markup: JSON.stringify({\n    keyboard: [\n      ['/fire'],\n      ['/up','/down'],\n      ['/left','/right'],\n      ['/arm','/disarm']],\n      'resize_keyboard' : true,\n      'one_time_keyboard' : false\n  })\n};\n\n\nmsg.error = false;\n// Dialogaufbau\nmsg.payload.content = 'What can I do for you?';\nmsg.payload.options = opts;\n\n\n//msg.payload.chatId = 123445;\n//msg.payload.messageId = 99;\n//msg.payload.sentMessageId = 99;\n//msg.payload.type = \"message\";\n\nreturn [ msg ];\n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 2420,
+        "y": 1420,
+        "wires": [
+            [
+                "3cea4394.ee83ac"
+            ]
+        ]
+    },
+    {
+        "id": "2d1135e4.47a05a",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "switch format",
+        "func": "msg.payload ={\n   dps : 1,\n    set : msg.payload\n}\n\n/*\n\n    */\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1470,
+        "y": 620,
+        "wires": [
+            [
+                "bfa33b65.fcf6d8"
+            ]
+        ]
+    },
+    {
+        "id": "34f3883d.f1c218",
+        "type": "switch",
+        "z": "118e52da.1ff74d",
+        "name": "warning light",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "2",
+                "vt": "num"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 1130,
+        "y": 620,
+        "wires": [
+            [
+                "4da77a73.cfde74"
+            ],
+            [
+                "40da0ab3.309d14"
+            ]
+        ]
+    },
+    {
+        "id": "40da0ab3.309d14",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "on",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "true",
+                "tot": "bool"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1310,
+        "y": 640,
+        "wires": [
+            [
+                "2d1135e4.47a05a"
+            ]
+        ]
+    },
+    {
+        "id": "4da77a73.cfde74",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "off",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "false",
+                "tot": "bool"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1310,
+        "y": 600,
+        "wires": [
+            [
+                "2d1135e4.47a05a"
+            ]
+        ]
+    },
+    {
+        "id": "bfa33b65.fcf6d8",
+        "type": "tuya-smart-device",
+        "z": "118e52da.1ff74d",
+        "deviceName": "Warning Plug",
+        "deviceId": "",
+        "deviceKey": "",
+        "deviceIp": "",
+        "retryTimeout": "1000",
+        "findTimeout": "1000",
+        "tuyaVersion": "3.1",
+        "x": 1490,
+        "y": 660,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "cb9d9e73.67aef",
+        "type": "delay",
+        "z": "118e52da.1ff74d",
+        "name": "disarm after firing",
+        "pauseType": "delay",
+        "timeout": "0.3",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 650,
+        "y": 340,
+        "wires": [
+            [
+                "9bc39c8b.d2248"
+            ]
+        ]
+    },
+    {
+        "id": "cac9897e.2362f8",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "fire",
+        "func": "msg.topic= msg.originalMessage.from.id;\nmsg.payload=0\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 330,
+        "y": 340,
+        "wires": [
+            [
+                "7217ba66.e59584"
+            ]
+        ]
+    },
+    {
+        "id": "9676732e.ae53",
+        "type": "debug",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1290,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "3e6c22c6.6981ae",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "award",
+        "func": "msg.payload= \"/award \"+msg.topic+\" 1 TRRT\"\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1390,
+        "y": 160,
+        "wires": [
+            [
+                "7b2df8d4.827cf8",
+                "f4a863c0.f0b9a",
+                "611d9fb4.7b10f"
+            ]
+        ]
+    },
+    {
+        "id": "758b69bb.ad4d38",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "BURN BABY BURN!",
+        "func": "msg.payload = {\n    chatId: -1001473011433,\n    type: 'message',\n    content: \"BURN BABY BURN!\"\n}\n/*\nmsg.payload.type = 'message';\n//var amount = flow.get('amount',amount);\nmsg.payload.content = \"BURN BABY BURN!\";\n//msg.payload.options = {reply_to_message_id : msg.payload.messageId}\nvar chatId = -1001473011433;\nmsg.payload.chatId = chatId;\n*/\nreturn [ msg ];\n",
+        "outputs": "1",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1300,
+        "y": 1100,
+        "wires": [
+            [
+                "970ec8fc.5e3ed8"
+            ]
+        ]
+    },
+    {
+        "id": "cd78bd0d.722e7",
+        "type": "delay",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": ".5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 1240,
+        "y": 180,
+        "wires": [
+            [
+                "3e6c22c6.6981ae"
+            ]
+        ]
+    },
+    {
+        "id": "611d9fb4.7b10f",
+        "type": "debug",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1750,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "f79966b8.008ad8",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "store amount",
+        "func": "var amount = msg.payload\nflow.set('amount',amount);",
+        "outputs": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 2870,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "5058527.fd692ac",
+        "type": "telegram sender",
+        "z": "118e52da.1ff74d",
+        "name": "send question",
+        "bot": "",
+        "haserroroutput": false,
+        "outputs": 1,
+        "x": 3500,
+        "y": 480,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "8e60f8fa.6a6348",
+        "type": "telegram sender",
+        "z": "118e52da.1ff74d",
+        "name": "send question",
+        "bot": "",
+        "haserroroutput": false,
+        "outputs": 1,
+        "x": 2740,
+        "y": 440,
+        "wires": [
+            [
+                "ddd0c908.c29f78"
+            ]
+        ]
+    },
+    {
+        "id": "619861d6.991ad",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "No account",
+        "func": "var id = flow.get('id',id)\nvar chatid=flow.get('chatid',chatid)\nmsg.payload = {\n    chatId: chatid,\n    type: 'message',\n    content: 'No associated Stellar account. Creating one.'\n}\nvar msgid = flow.get('msgid',msgid);\nmsg.payload.options = {reply_to_message_id : msgid}\n\nreturn msg;\n\n\n\n\n\n\n/*\nmsg.payload.type = 'message';\nmsg.payload.content = 'No associated Stellar account. Creating one.';\n//msg.payload.options = {reply_to_message_id : msg.payload.messageId}\nvar user = msg.payload;\nmsg.payload.chatId = user;\nflow.set('user',user);\n\nreturn [ msg ];\n\n\n\nmsg.payload = {\n    chatId: user,\n    type: 'message',\n    content: msg.payload\n}\n*/",
+        "outputs": "1",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 2550,
+        "y": 440,
+        "wires": [
+            [
+                "8e60f8fa.6a6348"
+            ]
+        ]
+    },
+    {
+        "id": "4acaeb4b.194014",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "check for public",
+        "func": "//var id = flow.get('id',id);\n//msg.payload.chatId = user;\n//flow.set('user',user);\nmsg.payload=msg.topic\nmsg.topic = \"SELECT * FROM TeleUsers WHERE id=\"+msg.topic\n\n\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 2880,
+        "y": 240,
+        "wires": [
+            [
+                "531e6129.61def"
+            ]
+        ]
+    },
+    {
+        "id": "8d8e974e.2a8238",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "retrieve public",
+        "func": "msg.payload=msg.payload[0].public\n\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 2560,
+        "y": 400,
+        "wires": [
+            [
+                "c3fe884a.87f918",
+                "69d19860.c960b8"
+            ]
+        ]
+    },
+    {
+        "id": "531e6129.61def",
+        "type": "sqlite",
+        "z": "118e52da.1ff74d",
+        "mydb": "29235876.a28e58",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "TelegramUsers",
+        "x": 3100,
+        "y": 240,
+        "wires": [
+            [
+                "3caadbb.b09e524"
+            ]
+        ]
+    },
+    {
+        "id": "3caadbb.b09e524",
+        "type": "switch",
+        "z": "118e52da.1ff74d",
+        "name": "user check",
+        "property": "payload[0].id",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "id",
+                "vt": "flow"
+            },
+            {
+                "t": "null"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 3090,
+        "y": 320,
+        "wires": [
+            [
+                "8d8e974e.2a8238"
+            ],
+            [
+                "619861d6.991ad"
+            ]
+        ]
+    },
+    {
+        "id": "f1ac4542.ff9728",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "awarded TRRT",
+        "func": "var id = flow.get('id',id)\nvar amount = flow.get('amount',amount)\nvar chatid=flow.get('chatid',chatid)\nmsg.payload = {\n    chatId: chatid,\n    type: 'message',\n    content: 'Success! Awarded '+amount+' TRRT to '+id\n}\nvar msgid = flow.get('msgid',msgid);\nmsg.payload.options = {reply_to_message_id : msgid}\n\n\n\nreturn [ msg ];\n\n/*\nmsg.payload = {\n    chatId: user,\n    type: 'message',\n    content: msg.payload\n}\n\n\nmsg.payload.type = 'message';\nvar amount = flow.get('amount',amount);\nmsg.payload.content = \"AWARDING \"+amount+\" TRRT!\";\n//msg.payload.options = {reply_to_message_id : msg.payload.messageId}\nvar chatId = flow.get('chatId',chatId);\nmsg.payload.chatId = chatId;\n\n\nreturn msg;\n\n\n\n*/",
+        "outputs": "1",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 3360,
+        "y": 400,
+        "wires": [
+            [
+                "5058527.fd692ac",
+                "922ba783.4fff48"
+            ]
+        ]
+    },
+    {
+        "id": "2d83b1c0.9cbcde",
+        "type": "split",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "splt": " ",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": true,
+        "addname": "",
+        "x": 2490,
+        "y": 260,
+        "wires": [
+            [
+                "9a7e5597.16b568",
+                "58dc795b.678cc8"
+            ]
+        ]
+    },
+    {
+        "id": "7ca55541.98f9ec",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "msg.payload",
+        "func": "msg.payload=msg.payload.content\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 2310,
+        "y": 260,
+        "wires": [
+            [
+                "2d83b1c0.9cbcde",
+                "917223c4.59601"
+            ]
+        ]
+    },
+    {
+        "id": "9a7e5597.16b568",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "topic=id \\n payload=amount",
+        "func": "var count = context.get('count',count)\ncount++;\ncontext.set('count',count)\n//var id = context.get('id',id)\n\nif (count===1){\n}\nif (count===2){\n    id=msg.payload;\n    flow.set('id',id)\n}\nif (count===3){\n    count=0;\n    context.set('count',count)\n    msg.topic=id;\n    return msg;\n}\n\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "// Code added here will be run once\n// whenever the node is deployed.\nvar count = 0\ncontext.set('count',count)\nvar id = 0\nflow.set('id',id)",
+        "finalize": "",
+        "x": 2670,
+        "y": 260,
+        "wires": [
+            [
+                "4acaeb4b.194014",
+                "f79966b8.008ad8",
+                "d780206d.05e68"
+            ]
+        ]
+    },
+    {
+        "id": "c3fe884a.87f918",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "Submit TRRT award",
+        "func": "var StellarSdk = global.get(\"stellarsdk\");\nvar server = new StellarSdk.Server(\"https://horizon-testnet.stellar.org\");\nvar secret = \"\";\nvar recipient = msg.payload;\nvar amount = flow.get('amount',amount);\n\nvar sourceKeys = StellarSdk.Keypair.fromSecret(secret);\nvar destinationId = recipient;\n// Transaction will hold a built transaction we can resubmit if the result is unknown.\nvar transaction;\n\n// First, check to make sure that the destination account exists.\n// You could skip this, but if the account does not exist, you will be charged\n// the transaction fee when the transaction fails.\nserver\n  .loadAccount(destinationId)\n  // If the account is not found, surface a nicer error message for logging.\n  .catch(function (error) {\n    if (error instanceof StellarSdk.NotFoundError) {\n      throw new Error(\"The destination account does not exist!\");\n    } else return error;\n  })\n  // If there was no error, load up-to-date information on your account.\n  .then(function () {\n    return server.loadAccount(sourceKeys.publicKey());\n  })\n  .then(function (sourceAccount) {\n    // Start building the transaction.\n    transaction = new StellarSdk.TransactionBuilder(sourceAccount, {\n      fee: StellarSdk.BASE_FEE,\n      networkPassphrase: StellarSdk.Networks.TESTNET,\n    })\n      .addOperation(\n        StellarSdk.Operation.payment({\n          destination: destinationId,\n          // Because Stellar allows transaction in many currencies, you must\n          // specify the asset type. The special \"native\" asset represents Lumens.\n          //asset: StellarSdk.Asset.native(),\n          asset: new StellarSdk.Asset(\"TRRT\",\"GARCVA5752SK34MMPQJ2NI4UYMNP35BN43PEEC5DCYFOSF3ICOTPJBCT\"),\n          amount: amount,\n        }),\n      )\n      // A memo allows you to add your own metadata to a transaction. It's\n      // optional and does not affect how Stellar treats the transaction.\n      .addMemo(StellarSdk.Memo.text('Award from TurretCannoneer'))\n      // Wait a maximum of three minutes for the transaction\n      .setTimeout(180)\n      .build();\n    // Sign the transaction to prove you are actually the person sending it.\n    transaction.sign(sourceKeys);\n    // And finally, send it off to Stellar!\n    return server.submitTransaction(transaction);\n  })\n  .then(function (result) {\n    console.log(\"Success! Results:\", result);\n    msg.payload=\"Success\"+\" https://stellar.expert/explorer/testnet/account/\"+sourceKeys.publicKey();\n    node.send(msg);\n  })\n  .catch(function (error) {\n    console.error(\"Something went wrong!\", error);\n    // If the result is unknown (no response body, timeout etc.) we simply resubmit\n    // already built transaction:\n    // server.submitTransaction(transaction);\n  });",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 3220,
+        "y": 500,
+        "wires": [
+            [
+                "f1ac4542.ff9728",
+                "6d0fceb8.975e6"
+            ]
+        ]
+    },
+    {
+        "id": "ddd0c908.c29f78",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "return keypair",
+        "func": "const fetch = global.get(\"nodefetch\");\n\nvar StellarSdk = global.get(\"stellarsdk\");\n// create a completely new and unique pair of keys\n// see more about KeyPair objects: https://stellar.github.io/js-stellar-sdk/Keypair.html\nconst pair = StellarSdk.Keypair.random();\n\n//console.log(pair.secret());\n//msg.payload = \"Pair secret: \" + pair.secret()\n//node.send(msg)\n// SAV76USXIJOBMEQXPANUOQM6F5LIOTLPDIDVRJBFFE2MDJXG24TAPUU7\n//console.log(pair.publicKey());\n//msg.payload = \"Pair publickey: \" + pair.publicKey()\n//node.send(msg)\n// GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZB\nasync function main() {\n  try {\n    const response = await fetch(\n      `https://friendbot.stellar.org?addr=${encodeURIComponent(\n        pair.publicKey(),\n      )}`,\n    );\n    const responseJSON = await response.json();\n    console.log(\"SUCCESS! You have a new account :)\\n\", responseJSON);\n  } catch (e) {\n    console.log(\"ERROR!\", e);\n  }\n\n\n}\nmain()\nvar user = msg.originalMessage.from.id;\nflow.set('user',user);\nmsg.payload=pair.secret();\n\nmsg.topic=pair.publicKey();\n//msg.payload.chatId=user;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 2260,
+        "y": 560,
+        "wires": [
+            [
+                "a3aa8794.5b6768",
+                "188573fe.77d80c",
+                "30a25cdc.50adb4",
+                "74243203.9a5edc",
+                "b80da3ca.d0692",
+                "426d8c9c.48e524"
+            ]
+        ]
+    },
+    {
+        "id": "11e2cc20.872224",
+        "type": "comment",
+        "z": "118e52da.1ff74d",
+        "name": "Generate Keypair",
+        "info": "",
+        "x": 2260,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "426d8c9c.48e524",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "Create public message",
+        "func": "var user = flow.get('user',user)\nmsg.payload = {\n    chatId: user,\n    type: 'message',\n    content: 'Public Key: '+msg.topic\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 2520,
+        "y": 560,
+        "wires": [
+            [
+                "2838b6d2.8822ea"
+            ]
+        ]
+    },
+    {
+        "id": "2838b6d2.8822ea",
+        "type": "telegram sender",
+        "z": "118e52da.1ff74d",
+        "name": "send msg",
+        "bot": "",
+        "haserroroutput": false,
+        "outputs": 1,
+        "x": 2860,
+        "y": 560,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "a3aa8794.5b6768",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "Create private message",
+        "func": "var user = flow.get('user',user)\nmsg.payload = {\n    chatId: user,\n    type: 'message',\n    content: 'Secret Key: '+msg.payload\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 2530,
+        "y": 600,
+        "wires": [
+            [
+                "2838b6d2.8822ea"
+            ]
+        ]
+    },
+    {
+        "id": "45e7a99d.a5d2c8",
+        "type": "sqlite",
+        "z": "118e52da.1ff74d",
+        "mydb": "29235876.a28e58",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "TelegramUsers",
+        "x": 2660,
+        "y": 640,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "188573fe.77d80c",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "add user",
+        "func": "var user = flow.get('user',user);\nvar private = msg.payload;\nvar public = msg.topic;\n\nmsg.topic = \"INSERT INTO TeleUsers(id, public, private) values(\"+user+\", \"+'\"'+public+'\", '+'\"'+private+'\")'\n\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 2480,
+        "y": 640,
+        "wires": [
+            [
+                "45e7a99d.a5d2c8"
+            ]
+        ]
+    },
+    {
+        "id": "30a25cdc.50adb4",
+        "type": "delay",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "8",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 2480,
+        "y": 740,
+        "wires": [
+            [
+                "29b4f803.fdd178"
+            ]
+        ]
+    },
+    {
+        "id": "29b4f803.fdd178",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "add trust",
+        "func": "var StellarSdk = global.get(\"stellarsdk\");\nvar server = new StellarSdk.Server(\"https://horizon-testnet.stellar.org\");\nvar secret = msg.payload;\nvar amount = flow.get('amount',amount);\n\nvar sourceKeys = StellarSdk.Keypair.fromSecret(secret);\n//var destinationId = recipient;\n// Transaction will hold a built transaction we can resubmit if the result is unknown.\nvar transaction;\n\n// First, check to make sure that the destination account exists.\n// You could skip this, but if the account does not exist, you will be charged\n// the transaction fee when the transaction fails.\nserver\n  .loadAccount(sourceKeys.publicKey())\n\n  .then(function (sourceAccount) {\n    // Start building the transaction.\n    transaction = new StellarSdk.TransactionBuilder(sourceAccount, {\n      fee: StellarSdk.BASE_FEE,\n      networkPassphrase: StellarSdk.Networks.TESTNET,\n    })\n      .addOperation(\n        StellarSdk.Operation.changeTrust({\n          //destination: destinationId,\n          // Because Stellar allows transaction in many currencies, you must\n          // specify the asset type. The special \"native\" asset represents Lumens.\n          //asset: StellarSdk.Asset.native(),\n          asset: new StellarSdk.Asset(\"TRRT\",\"GARCVA5752SK34MMPQJ2NI4UYMNP35BN43PEEC5DCYFOSF3ICOTPJBCT\"),\n          //amount: amount,\n        }),\n      )\n      // A memo allows you to add your own metadata to a transaction. It's\n      // optional and does not affect how Stellar treats the transaction.\n      .addMemo(StellarSdk.Memo.text('Via BlockShangerous NodeRed'))\n      // Wait a maximum of three minutes for the transaction\n      .setTimeout(180)\n      .build();\n    // Sign the transaction to prove you are actually the person sending it.\n    transaction.sign(sourceKeys);\n    // And finally, send it off to Stellar!\n    return server.submitTransaction(transaction);\n  })\n  .then(function (result) {\n    console.log(\"Success! Results:\", result);\n    msg.payload=\"Success\"+\" https://stellar.expert/explorer/testnet/account/\"+sourceKeys.publicKey();\n    node.send(msg);\n  })\n  .catch(function (error) {\n    console.error(\"Something went wrong!\", error);\n    // If the result is unknown (no response body, timeout etc.) we simply resubmit\n    // already built transaction:\n    // server.submitTransaction(transaction);\n  });",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 2660,
+        "y": 740,
+        "wires": [
+            [
+                "945d54d0.af1d88"
+            ]
+        ]
+    },
+    {
+        "id": "1d828a0a.0ac216",
+        "type": "inject",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "SBL526IAFWJBPQMYVSARCH6OKJ3ZCK4BNN2LG4F7VEQFNWV77RJSABLH",
+        "payloadType": "str",
+        "x": 2410,
+        "y": 780,
+        "wires": [
+            [
+                "29b4f803.fdd178",
+                "e1fe1dab.aeed5"
+            ]
+        ]
+    },
+    {
+        "id": "e1fe1dab.aeed5",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "Create trustline message",
+        "func": "var user = flow.get('user',user)\nmsg.payload = {\n    chatId: user,\n    type: 'message',\n    content: 'Adding Trustline to TRRT'\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 2710,
+        "y": 700,
+        "wires": [
+            [
+                "2838b6d2.8822ea"
+            ]
+        ]
+    },
+    {
+        "id": "945d54d0.af1d88",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "Create success message",
+        "func": "var user = flow.get('user',user)\nmsg.payload = {\n    chatId: user,\n    type: 'message',\n    content: msg.payload\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 2970,
+        "y": 720,
+        "wires": [
+            [
+                "2838b6d2.8822ea",
+                "15bf7c4c.895c14"
+            ]
+        ]
+    },
+    {
+        "id": "74243203.9a5edc",
+        "type": "delay",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "12",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 3040,
+        "y": 600,
+        "wires": [
+            [
+                "9c9e10fa.316e"
+            ]
+        ]
+    },
+    {
+        "id": "9c9e10fa.316e",
+        "type": "change",
+        "z": "118e52da.1ff74d",
+        "name": "public",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "topic",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 3190,
+        "y": 600,
+        "wires": [
+            [
+                "c3fe884a.87f918"
+            ]
+        ]
+    },
+    {
+        "id": "7d70f32c.17da5c",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "store chat info",
+        "func": "//var msgid = msg.payload.messageId\n//flow.set('msgid',msgid);\nvar chatid = -1001473011433\nflow.set('chatid',chatid);\nvar user = msg.topic\nflow.set('user',user)\nreturn msg",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 2320,
+        "y": 140,
+        "wires": [
+            [
+                "2590822f.83cd4e",
+                "86f17f0b.cb04"
+            ]
+        ]
+    },
+    {
+        "id": "d780206d.05e68",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "Awarding message",
+        "func": "var user = flow.get('user',user)\nvar chatid=flow.get('chatid',chatid)\nvar amount = flow.get('amount',amount)\nmsg.payload = {\n    chatId: chatid,\n    type: 'message',\n    content: \"Awarding \"+amount+\" TRRT to \"+msg.topic\n}\nvar msgid = flow.get('msgid',msgid);\nmsg.payload.options = {reply_to_message_id : msgid}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 2890,
+        "y": 200,
+        "wires": [
+            [
+                "8ac99640.e756f8"
+            ]
+        ]
+    },
+    {
+        "id": "8ac99640.e756f8",
+        "type": "telegram sender",
+        "z": "118e52da.1ff74d",
+        "name": "send msg",
+        "bot": "",
+        "haserroroutput": false,
+        "outputs": 1,
+        "x": 3080,
+        "y": 200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b80da3ca.d0692",
+        "type": "delay",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "2",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 2480,
+        "y": 700,
+        "wires": [
+            [
+                "e1fe1dab.aeed5"
+            ]
+        ]
+    },
+    {
+        "id": "2590822f.83cd4e",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "user check",
+        "func": "var user=flow.get('user',user)\nif(user===1428193011){\n   return [msg,null]; \n}\nelse{\n    return [null,msg]\n}\n\n\n",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 2550,
+        "y": 200,
+        "wires": [
+            [
+                "7ca55541.98f9ec"
+            ],
+            [
+                "2b21b935.9ae156"
+            ]
+        ]
+    },
+    {
+        "id": "94d26213.0948",
+        "type": "telegram sender",
+        "z": "118e52da.1ff74d",
+        "name": "send question",
+        "bot": "",
+        "haserroroutput": false,
+        "outputs": 1,
+        "x": 2880,
+        "y": 140,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "2b21b935.9ae156",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "not auth",
+        "func": "var id = flow.get('id',id)\nvar amount = flow.get('amount',amount)\nvar chatid=flow.get('chatid',chatid)\nmsg.payload = {\n    chatId: chatid,\n    type: 'message',\n    content: 'User not authorized to send awards.'\n}\nvar msgid = flow.get('msgid',msgid);\nmsg.payload.options = {reply_to_message_id : msgid}\n\n\n\nreturn [ msg ];\n\n/*\nmsg.payload = {\n    chatId: user,\n    type: 'message',\n    content: msg.payload\n}\n\n\nmsg.payload.type = 'message';\nvar amount = flow.get('amount',amount);\nmsg.payload.content = \"AWARDING \"+amount+\" TRRT!\";\n//msg.payload.options = {reply_to_message_id : msg.payload.messageId}\nvar chatId = flow.get('chatId',chatId);\nmsg.payload.chatId = chatId;\n\n\nreturn msg;\n\n\n\n*/",
+        "outputs": "1",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 2720,
+        "y": 140,
+        "wires": [
+            [
+                "94d26213.0948"
+            ]
+        ]
+    },
+    {
+        "id": "b2afca1b.05edc8",
+        "type": "telegram command",
+        "z": "118e52da.1ff74d",
+        "name": "award",
+        "command": "/award",
+        "bot": "",
+        "strict": false,
+        "hasresponse": true,
+        "useregex": false,
+        "removeregexcommand": false,
+        "outputs": 2,
+        "x": 2070,
+        "y": 180,
+        "wires": [
+            [
+                "c228b8b7.8ae628"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "c228b8b7.8ae628",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "topic=id",
+        "func": "msg.topic= msg.originalMessage.from.id;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 2220,
+        "y": 180,
+        "wires": [
+            [
+                "7d70f32c.17da5c"
+            ]
+        ]
+    },
+    {
+        "id": "917223c4.59601",
+        "type": "debug",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2330,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "922ba783.4fff48",
+        "type": "debug",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 3540,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "86f17f0b.cb04",
+        "type": "debug",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2530,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "f4a863c0.f0b9a",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "store chat info",
+        "func": "//var msgid = msg.payload.messageId\n//flow.set('msgid',msgid);\nvar chatid = -1001473011433\nflow.set('chatid',chatid);\nvar user = 1428193011\nflow.set('user',user)\nreturn msg",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 2320,
+        "y": 100,
+        "wires": [
+            [
+                "11454e7.99ce1b2",
+                "2d83b1c0.9cbcde"
+            ]
+        ]
+    },
+    {
+        "id": "11454e7.99ce1b2",
+        "type": "debug",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2560,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "58dc795b.678cc8",
+        "type": "debug",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2660,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "69d19860.c960b8",
+        "type": "debug",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 3090,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "6d0fceb8.975e6",
+        "type": "debug",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 3430,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "2abea85d.973b38",
+        "type": "delay",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "0.1",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 1250,
+        "y": 240,
+        "wires": [
+            [
+                "123c1599.5624ca"
+            ]
+        ]
+    },
+    {
+        "id": "777d9662.222908",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "puffs",
+        "func": "var count = flow.get('count',count)\n\n\nif (count>0){\n    count=count-1\n    flow.set('count',count)\n   return msg; \n}\n\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1610,
+        "y": 180,
+        "wires": [
+            [
+                "2a1c4fb8.428a8"
+            ]
+        ]
+    },
+    {
+        "id": "a9517de9.7b88d",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "count=",
+        "func": "var amount_rec=flow.get('amount_rec',amount_rec)\nvar count=amount_rec\nflow.set('count',count)\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "// Code added here will be run once\n// whenever the node is deployed.\nvar wait=0\nflow.set('wait',wait)",
+        "finalize": "",
+        "x": 1210,
+        "y": 140,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f039385c.3b4098",
+        "type": "debug",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1610,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "4cbd0bc.42a72f4",
+        "type": "inject",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 1390,
+        "y": 140,
+        "wires": [
+            [
+                "777d9662.222908"
+            ]
+        ]
+    },
+    {
+        "id": "e5420a23.7bef68",
+        "type": "debug",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1130,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "58125373.dfdfcc",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "FIREBALL!",
+        "func": "msg.payload = {\n    chatId: -1001473011433,\n    type: 'message',\n    content: \"FIREBALL!\"\n}\n/*\nmsg.payload.type = 'message';\n//var amount = flow.get('amount',amount);\nmsg.payload.content = \"BURN BABY BURN!\";\n//msg.payload.options = {reply_to_message_id : msg.payload.messageId}\nvar chatId = -1001473011433;\nmsg.payload.chatId = chatId;\n*/\nreturn [ msg ];\n",
+        "outputs": "1",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1290,
+        "y": 1060,
+        "wires": [
+            [
+                "970ec8fc.5e3ed8"
+            ]
+        ]
+    },
+    {
+        "id": "620ed7bf.5b91c8",
+        "type": "debug",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1540,
+        "y": 940,
+        "wires": []
+    },
+    {
+        "id": "67c89cbc.404224",
+        "type": "debug",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 920,
+        "y": 1220,
+        "wires": []
+    },
+    {
+        "id": "51f3b0a9.19fef",
+        "type": "debug",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 110,
+        "y": 680,
+        "wires": []
+    },
+    {
+        "id": "ee9e3bb1.5b7b18",
+        "type": "debug",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 600,
+        "y": 900,
+        "wires": []
+    },
+    {
+        "id": "3da98306.4b059c",
+        "type": "switch",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "property": "flamearm",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 370,
+        "y": 600,
+        "wires": [
+            [
+                "3eb23f22.e0efc"
+            ],
+            [
+                "1bbba4b0.745c4b"
+            ]
+        ]
+    },
+    {
+        "id": "e602b26a.84c3e",
+        "type": "split",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "splt": " ",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": true,
+        "addname": "",
+        "x": 330,
+        "y": 820,
+        "wires": [
+            [
+                "ef595343.a058"
+            ]
+        ]
+    },
+    {
+        "id": "a89c1ee6.c5e8a",
+        "type": "inject",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 410,
+        "y": 1600,
+        "wires": [
+            [
+                "5776d829.d17248"
+            ]
+        ]
+    },
+    {
+        "id": "ef595343.a058",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "payload=amount",
+        "func": "var counter = context.get('counter',counter)\ncounter++;\ncontext.set('counter',counter)\n//var id = context.get('id',id)\n\nif (counter===1){\n}\nif (counter===2){\n}\nif (counter===3){\n}\nif (counter===4){\n    counter=0;\n    context.set('counter',counter)\n    msg.delay=msg.payload*1000;\n    return msg;\n}\n\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "// Code added here will be run once\n// whenever the node is deployed.\nvar counter = 0\ncontext.set('counter',counter)\n//var id = 0\n//flow.set('id',id)",
+        "finalize": "",
+        "x": 530,
+        "y": 820,
+        "wires": [
+            [
+                "ba13c1fb.f34b4"
+            ]
+        ]
+    },
+    {
+        "id": "ba13c1fb.f34b4",
+        "type": "switch",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "empty"
+            },
+            {
+                "t": "nempty"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 750,
+        "y": 820,
+        "wires": [
+            [
+                "9e638757.c084e8",
+                "2d33b618.efd87a",
+                "a3a9efb7.bfc04",
+                "c09b82.8a12848"
+            ],
+            [
+                "baafbbe0.0f5818",
+                "2d33b618.efd87a",
+                "a3a9efb7.bfc04",
+                "2edbd1fd.ab8dce"
+            ]
+        ]
+    },
+    {
+        "id": "baafbbe0.0f5818",
+        "type": "delay",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "pauseType": "delayv",
+        "timeout": "2",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 1140,
+        "y": 980,
+        "wires": [
+            [
+                "c62ca19c.8e1d4"
+            ]
+        ]
+    },
+    {
+        "id": "3c853479.36171c",
+        "type": "split",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "splt": " ",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": true,
+        "addname": "",
+        "x": 330,
+        "y": 880,
+        "wires": [
+            [
+                "c0fa888d.df8dd8"
+            ]
+        ]
+    },
+    {
+        "id": "c0fa888d.df8dd8",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "payload=amount",
+        "func": "var counter = context.get('counter',counter)\ncounter++;\ncontext.set('counter',counter)\n//var id = context.get('id',id)\n\nif (counter===1){\n}\nif (counter===2){\n}\nif (counter===3){\n}\nif (counter===4){\n    counter=0;\n    context.set('counter',counter)\n    msg.delay=msg.payload*1000;\n    return msg;\n}\n\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "// Code added here will be run once\n// whenever the node is deployed.\nvar counter = 0\ncontext.set('counter',counter)\n//var id = 0\n//flow.set('id',id)",
+        "finalize": "",
+        "x": 530,
+        "y": 880,
+        "wires": [
+            [
+                "46746774.d0d6a8"
+            ]
+        ]
+    },
+    {
+        "id": "46746774.d0d6a8",
+        "type": "switch",
+        "z": "118e52da.1ff74d",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "empty"
+            },
+            {
+                "t": "nempty"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 750,
+        "y": 880,
+        "wires": [
+            [
+                "e9abd25e.9a6a8",
+                "9665061b.260fc8",
+                "9e638757.c084e8",
+                "1001eef2.6f1cb1"
+            ],
+            [
+                "e9abd25e.9a6a8",
+                "9665061b.260fc8",
+                "baafbbe0.0f5818",
+                "96c2ea21.01ca28"
+            ]
+        ]
+    },
+    {
+        "id": "96c2ea21.01ca28",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "rizzo",
+        "func": "msg.payload= \"to the rizzo \"+ \"(\"+msg.payload+\"s)\"\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 990,
+        "y": 1080,
+        "wires": [
+            [
+                "7b2df8d4.827cf8"
+            ]
+        ]
+    },
+    {
+        "id": "2edbd1fd.ab8dce",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "lefticles",
+        "func": "msg.payload= \"activating lefticles \"+ \"(\"+msg.payload+\"s)\"\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1000,
+        "y": 1040,
+        "wires": [
+            [
+                "7b2df8d4.827cf8"
+            ]
+        ]
+    },
+    {
+        "id": "e31596d.424c068",
+        "type": "comment",
+        "z": "fece67b7.0fd7b8",
+        "name": "Generate Keypair",
+        "info": "",
+        "x": 760,
+        "y": 1040,
+        "wires": []
+    },
+    {
+        "id": "3c8c8039.8fa53",
+        "type": "function",
+        "z": "fece67b7.0fd7b8",
+        "name": "Create public message",
+        "func": "\nmsg.payload = {\n    chatId: -1001473011433,\n    type: 'message',\n    content: 'You gotta DM this bot before it can give you private account info. Slide on in.'\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1120,
+        "y": 1100,
+        "wires": [
+            [
+                "acbbb73c.6032b8"
+            ]
+        ]
+    },
+    {
+        "id": "acbbb73c.6032b8",
+        "type": "telegram sender",
+        "z": "fece67b7.0fd7b8",
+        "name": "send msg",
+        "bot": "",
+        "haserroroutput": false,
+        "outputs": 1,
+        "x": 1460,
+        "y": 1100,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ab21.6fa774df9",
+        "type": "function",
+        "z": "fece67b7.0fd7b8",
+        "name": "Create private message",
+        "func": "var user = flow.get('user',user)\nmsg.payload = {\n    chatId: user,\n    type: 'message',\n    content: 'Secret Key: '+msg.payload\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1130,
+        "y": 1140,
+        "wires": [
+            [
+                "acbbb73c.6032b8"
+            ]
+        ]
+    },
+    {
+        "id": "9021ec79.a52a8",
+        "type": "telegram command",
+        "z": "fece67b7.0fd7b8",
+        "name": "account",
+        "command": "/account",
+        "bot": "",
+        "strict": false,
+        "hasresponse": true,
+        "useregex": false,
+        "removeregexcommand": false,
+        "outputs": 2,
+        "x": 410,
+        "y": 1000,
+        "wires": [
+            [
+                "4d9b5bbc.270e44",
+                "1e778388.7c3d8c"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "4d9b5bbc.270e44",
+        "type": "debug",
+        "z": "fece67b7.0fd7b8",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 770,
+        "y": 1000,
+        "wires": []
+    },
+    {
+        "id": "1e778388.7c3d8c",
+        "type": "function",
+        "z": "fece67b7.0fd7b8",
+        "name": "topic=id",
+        "func": "var user = msg.originalMessage.from.id;\nflow.set('user',user)\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 520,
+        "y": 1080,
+        "wires": [
+            [
+                "e80ce3f5.17799"
+            ]
+        ]
+    },
+    {
+        "id": "2cbfca3.4b4ed36",
+        "type": "function",
+        "z": "fece67b7.0fd7b8",
+        "name": "public key",
+        "func": "var user = flow.get('user',user)\nmsg.payload = {\n    chatId: user,\n    type: 'message',\n    content: 'Public Key: '+msg.payload[0].public\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1080,
+        "y": 1000,
+        "wires": [
+            [
+                "acbbb73c.6032b8"
+            ]
+        ]
+    },
+    {
+        "id": "f2a047dc.45ccf8",
+        "type": "function",
+        "z": "fece67b7.0fd7b8",
+        "name": "link",
+        "func": "var user = flow.get('user',user)\nmsg.payload = {\n    chatId: user,\n    type: 'message',\n    content: \"https://stellar.expert/explorer/testnet/account/\"+msg.payload[0].public\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1330,
+        "y": 1000,
+        "wires": [
+            [
+                "acbbb73c.6032b8"
+            ]
+        ]
+    },
+    {
+        "id": "35dded8c.368002",
+        "type": "debug",
+        "z": "fece67b7.0fd7b8",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1250,
+        "y": 1280,
+        "wires": []
+    },
+    {
+        "id": "58c55540.18745c",
+        "type": "sqlite",
+        "z": "fece67b7.0fd7b8",
+        "mydb": "29235876.a28e58",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "TelegramUsers",
+        "x": 740,
+        "y": 1220,
+        "wires": [
+            [
+                "f74c5d34.b259d"
+            ]
+        ]
+    },
+    {
+        "id": "f74c5d34.b259d",
+        "type": "switch",
+        "z": "fece67b7.0fd7b8",
+        "name": "get json",
+        "property": "payload[0].id",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "user",
+                "vt": "flow"
+            },
+            {
+                "t": "null"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 880,
+        "y": 1140,
+        "wires": [
+            [
+                "31a5e73d.27cba8",
+                "2cbfca3.4b4ed36",
+                "ba02c5b1.3e7428"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "31a5e73d.27cba8",
+        "type": "function",
+        "z": "fece67b7.0fd7b8",
+        "name": "topic=public payload=private",
+        "func": "msg.payload=msg.payload[0].private\n//msg.topic=msg.payload[0].public\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1000,
+        "y": 1280,
+        "wires": [
+            [
+                "3c8c8039.8fa53",
+                "ab21.6fa774df9",
+                "35dded8c.368002"
+            ]
+        ]
+    },
+    {
+        "id": "e80ce3f5.17799",
+        "type": "function",
+        "z": "fece67b7.0fd7b8",
+        "name": "check for secret",
+        "func": "var user = msg.originalMessage.from.id;\nmsg.payload.chatId = user;\nflow.set('user',user);\n\nmsg.topic = \"SELECT * FROM TeleUsers WHERE id=\"+user\n\n\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 640,
+        "y": 1140,
+        "wires": [
+            [
+                "58c55540.18745c"
+            ]
+        ]
+    },
+    {
+        "id": "8a722c26.372bb",
+        "type": "function",
+        "z": "fece67b7.0fd7b8",
+        "name": "create and testfund keypair \\n payload=secret topic=public",
+        "func": "const fetch = global.get(\"nodefetch\");\n\nvar StellarSdk = global.get(\"stellarsdk\");\n// create a completely new and unique pair of keys\n// see more about KeyPair objects: https://stellar.github.io/js-stellar-sdk/Keypair.html\nconst pair = StellarSdk.Keypair.random();\n\n//console.log(pair.secret());\n//msg.payload = \"Pair secret: \" + pair.secret()\n//node.send(msg)\n// SAV76USXIJOBMEQXPANUOQM6F5LIOTLPDIDVRJBFFE2MDJXG24TAPUU7\n//console.log(pair.publicKey());\n//msg.payload = \"Pair publickey: \" + pair.publicKey()\n//node.send(msg)\n// GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZB\nasync function main() {\n  try {\n    const response = await fetch(\n      `https://friendbot.stellar.org?addr=${encodeURIComponent(\n        pair.publicKey(),\n      )}`,\n    );\n    const responseJSON = await response.json();\n    console.log(\"SUCCESS! You have a new account :)\\n\", responseJSON);\n  } catch (e) {\n    console.log(\"ERROR!\", e);\n  }\n\n\n}\nmain()\nvar user = msg.originalMessage.from.id;\nflow.set('user',user);\nmsg.payload=pair.secret();\n\nmsg.topic=pair.publicKey();\n//msg.payload.chatId=user;\n\nmsg.id= msg.originalMessage.from.id;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 360,
+        "y": 1380,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ba02c5b1.3e7428",
+        "type": "delay",
+        "z": "fece67b7.0fd7b8",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": ".25",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 1200,
+        "y": 920,
+        "wires": [
+            [
+                "f2a047dc.45ccf8"
+            ]
+        ]
+    },
+    {
+        "id": "15bf7c4c.895c14",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "Create public message",
+        "func": "\nmsg.payload = {\n    chatId: -1001473011433,\n    type: 'message',\n    content: 'You gotta DM this bot before it can give you private account info. Slide on in. Then type /account'\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 3140,
+        "y": 780,
+        "wires": [
+            [
+                "2838b6d2.8822ea"
+            ]
+        ]
+    },
+    {
+        "id": "3eb23f22.e0efc",
+        "type": "split",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "splt": " ",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": true,
+        "addname": "",
+        "x": 550,
+        "y": 620,
+        "wires": [
+            [
+                "dcd8b5ef.ceed58",
+                "35311297.f637ee"
+            ]
+        ]
+    },
+    {
+        "id": "dcd8b5ef.ceed58",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "payload=amount",
+        "func": "var counter = context.get('counter',counter)\ncounter++;\ncontext.set('counter',counter)\n//var id = context.get('id',id)\n\nif (counter===1){\n}\nif (counter===2){\n}\nif (counter===3){\n}\nif (counter===4){\n    counter=0;\n    context.set('counter',counter)\n    msg.delay=msg.payload*1000;\n    return msg;\n}\n\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "// Code added here will be run once\n// whenever the node is deployed.\nvar counter = 0\ncontext.set('counter',counter)\n//var id = 0\n//flow.set('id',id)",
+        "finalize": "",
+        "x": 750,
+        "y": 620,
+        "wires": [
+            [
+                "a27c2c80.8b326"
+            ]
+        ]
+    },
+    {
+        "id": "a27c2c80.8b326",
+        "type": "switch",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "empty"
+            },
+            {
+                "t": "nempty"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 970,
+        "y": 620,
+        "wires": [
+            [
+                "5017ccd8.4ef9b4",
+                "1895db20.98c765"
+            ],
+            [
+                "ffd31db2.03607",
+                "5017ccd8.4ef9b4"
+            ]
+        ]
+    },
+    {
+        "id": "35311297.f637ee",
+        "type": "debug",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 740,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "1895db20.98c765",
+        "type": "function",
+        "z": "34c774d6.3d64cc",
+        "name": "store amount",
+        "func": "var amount = \"1\";\nflow.set('amount',amount);",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1150,
+        "y": 620,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b8ba292a.8532b8",
+        "type": "debug",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1370,
+        "y": 760,
+        "wires": []
+    },
+    {
+        "id": "d0047ce0.87b95",
+        "type": "switch",
+        "z": "34c774d6.3d64cc",
+        "name": "",
+        "property": "amount",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            },
+            {
+                "t": "nnull"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 1130,
+        "y": 1040,
+        "wires": [
+            [
+                "58125373.dfdfcc"
+            ],
+            [
+                "758b69bb.ad4d38"
+            ]
+        ]
+    },
+    {
+        "id": "1001eef2.6f1cb1",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "rizzo",
+        "func": "msg.payload= \"to the rizzo (default-2s)\"\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1270,
+        "y": 1080,
+        "wires": [
+            [
+                "7b2df8d4.827cf8"
+            ]
+        ]
+    },
+    {
+        "id": "c09b82.8a12848",
+        "type": "function",
+        "z": "118e52da.1ff74d",
+        "name": "lefticles",
+        "func": "msg.payload= \"activating lefticles (default-2s)\"\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1280,
+        "y": 1040,
+        "wires": [
+            [
+                "7b2df8d4.827cf8"
+            ]
+        ]
+    }
+]
