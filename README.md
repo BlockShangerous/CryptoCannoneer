@@ -45,7 +45,8 @@ Literally burn your token!
 So my background is actually in stage lighting for concerts so I grabbed a couple of DMX controlled pyro stage fire projectors off ebay.
 These are connected to wifi enabled outlets that get turned on and off via the nodered flow.
 
-The burninator flow monitors the issuing account on Stellar for receipt of TRRT token then triggers the wifi outlet for .1s/TRRT burned
+The burninator flow monitors the issuing account on Stellar for receipt of TRRT token then triggers the wifi outlet for .1s/TRRT burned.
+
 On Stellar, when custom tokens are returned to the issuer they are removed from the network and effectively "burned."
 
 The /burn command will send 1 TRRT from your Stellar account to the issuer. This command also has a parser if you would like to fire off multiple fire blasts!
