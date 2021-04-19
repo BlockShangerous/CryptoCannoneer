@@ -13,11 +13,18 @@ TRRT Token can then be sent back to the issuer and literally burned via a flamet
 ![Cannoneer Flow](https://user-images.githubusercontent.com/79179630/115274504-990b0500-a0f5-11eb-9e1f-23bb06f0cf15.PNG)
 
 Features Overview:
+
 Telegram Integration allows for group control via chat commands
+
 /fire triggers the solenoid holding back the compressed air
+
 /up and /down move the tilt actuator for .5s
+
 /left and /right default to 2s but also have a parser and can accept any amount of time. examples: /left .5 or /right 17
+
 /help will bring up a keyboard to make controls easier
+
+
 the turret automatically disarms after firing, /arm will rearm it after a 3s delay
 
 There is an admin safety that can disable firing
