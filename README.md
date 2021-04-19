@@ -35,9 +35,8 @@ It then awards 1 TRRT token to that Stellar account
 
 If the user has started a DM with the bot it can privately message the Stellar keys to them if they use /account
 
-/n
-\n
-BURNINATOR
+
+##BURNINATOR
 
 The world's first cryptocurrency controlled flamethrower!
 
