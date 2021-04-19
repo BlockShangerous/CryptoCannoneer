@@ -40,4 +40,8 @@ The /burn command will send 1 TRRT from your Stellar account to the issuer. This
 
 The admin disable for the flamethrowers is checked before the /burn command sends any token to ensure people don't waste their TRRT if the flamethrowers are not armed
 
-If you want to support this project please consider donating and/or buying some NFTs (coming soon!). This has been a ton of fun but also expensive and time consuming. I really would love to see this become profitable so I can expand and create a shooting gallery where people can fire golf balls at bottles and other breakables!
+Ironically, the flamethrowers run off automotive starting fluid and so they literally burn ETHER (this really cracks me up)
+![IMG_7147](https://user-images.githubusercontent.com/79179630/115277046-a37ace00-a0f8-11eb-8c06-ab66c9ddfc26.jpg)
+
+
+If you want to support this project please consider donating and/or buying some NFTs (coming soon!). This has been a ton of fun but also expensive and time consuming. I really would love to see this become profitable so I can expand and create a shooting gallery where people can fire golf balls at bottles and other breakables! If I can start making a profit on this I would also like to get a more suitable location and create an automatic reloader so this could theoretically run 24/7. (Obviously the flamethrowers won't be on unsupervised, but people could still play and earn while I sleep)
