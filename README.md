@@ -12,7 +12,7 @@ TRRT Token can then be sent back to the issuer and literally burned via a flamet
 
 ![Cannoneer Flow](https://user-images.githubusercontent.com/79179630/115274504-990b0500-a0f5-11eb-9e1f-23bb06f0cf15.PNG)
 
-Features Overview:
+## Features Overview:
 
 Telegram Integration allows for group control via chat commands
 
