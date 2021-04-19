@@ -29,9 +29,10 @@ the turret automatically disarms after firing, /arm will rearm it after a 3s del
 
 There is an admin safety that can disable firing
 
-After someone successfully uses /fire the award function is triggered
-This checks the database to see if that telegram user has an associated Stellar account, if not, it creates one, uses friendbot to fund it (testnet), and creates a trustline to TRRT
-It then awards 1 TRRT token to that Stellar account
+After someone successfully uses /fire the award function is triggered.
+
+This checks the database to see if that telegram user has an associated Stellar account, if not, it creates one, uses friendbot to fund it (testnet), and creates a trustline to TRRT.
+It then awards 1 TRRT token to that Stellar account.
 
 If the user has started a DM with the bot it can privately message the Stellar keys to them if they use /account
 
