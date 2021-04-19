@@ -3,7 +3,8 @@ Node Red Flows that control the turret
 
 https://blockshangerous.com/cryptocannoneer/
 
-This is a turret controlled via Telegram that runs on a raspi and is programmed with nodered
+This is a turret controlled via Telegram that runs on a raspi and is programmed with nodered.
+
 There is also a Stellar Lumens (XLM) integration that awards players with TRRT Token whenever they successfully fire the turret.
 TRRT Token can then be sent back to the issuer and literally burned via a flamethrower!
 
